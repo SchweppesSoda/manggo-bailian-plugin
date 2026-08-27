@@ -1,0 +1,292 @@
+{
+  "manifestVersion": 1,
+  "id": "com.fangjun.manggo-bailian",
+  "name": "Bailian Translation & OCR",
+  "version": "2.0.0",
+  "description": "Manggo translation and OCR services for Alibaba Cloud Model Studio pay-as-you-go, Coding Plan, and Token Plan.",
+  "author": "Fang Jun",
+  "homepage": "https://github.com/SchweppesSoda/manggo-bailian-plugin",
+  "icon": "icon.png",
+  "permissions": [
+    "network"
+  ],
+  "runtime": {
+    "kind": "bun",
+    "api": "manggo.plugin.v1",
+    "main": "main.js"
+  },
+  "services": [
+    {
+      "id": "translation",
+      "providerId": "com.fangjun.manggo-bailian.translation",
+      "kind": "translation",
+      "displayName": "百炼翻译",
+      "entry": "translate",
+      "resultType": "text",
+      "icon": "icon.png",
+      "permissions": [
+        "network"
+      ],
+      "language": {
+        "auto": "auto",
+        "en_US": "English",
+        "zh_CN": "Simplified Chinese",
+        "zh_TW": "Traditional Chinese",
+        "ja_JP": "Japanese",
+        "ko_KR": "Korean",
+        "fr_FR": "French",
+        "vi_VN": "Vietnamese",
+        "de_DE": "German",
+        "it_IT": "Italian",
+        "ru_RU": "Russian",
+        "uk_UA": "Ukrainian"
+      },
+      "config": [
+        {
+          "key": "accessMode",
+          "label": "Billing mode",
+          "control": "select",
+          "required": true,
+          "default": "pay_as_you_go",
+          "options": [
+            { "label": "Pay-as-you-go (recommended)", "value": "pay_as_you_go" },
+            { "label": "Coding Plan (eligibility required)", "value": "coding_plan" },
+            { "label": "Token Plan (eligibility required)", "value": "token_plan" }
+          ],
+          "description": "The API Key and Base URL must come from the same billing mode. Coding Plan and Token Plan are officially restricted to eligible interactive AI-tool use."
+        },
+        {
+          "key": "region",
+          "label": "Region",
+          "control": "select",
+          "required": true,
+          "default": "china",
+          "options": [
+            { "label": "China (Beijing)", "value": "china" },
+            { "label": "International (Singapore)", "value": "singapore" }
+          ],
+          "description": "Singapore is available for pay-as-you-go. Coding Plan and Token Plan currently use China (Beijing)."
+        },
+        {
+          "key": "workspaceId",
+          "label": "Workspace ID (optional)",
+          "control": "text",
+          "placeholder": "Your Model Studio workspace ID",
+          "description": "For pay-as-you-go, builds the recommended workspace-specific Base URL. Leave blank to use the shared endpoint."
+        },
+        {
+          "key": "customBaseUrl",
+          "label": "Custom Base URL (optional)",
+          "control": "text",
+          "placeholder": "https://.../compatible-mode/v1",
+          "description": "Overrides billing mode, region, and Workspace ID. HTTPS only."
+        },
+        {
+          "key": "apiKey",
+          "label": "API Key",
+          "control": "password",
+          "required": true,
+          "secret": true,
+          "placeholder": "Paste the key issued for the selected billing mode",
+          "description": "Stored by Manggo and sent only as the Bearer token. Plan keys and pay-as-you-go keys are not interchangeable."
+        },
+        {
+          "key": "model",
+          "label": "Model",
+          "control": "select",
+          "editable": true,
+          "required": true,
+          "default": "qwen3.7-plus",
+          "options": [
+            { "label": "Qwen MT Plus (pay-as-you-go only)", "value": "qwen-mt-plus" },
+            { "label": "Qwen 3.8 Max (pay-as-you-go / Token Plan)", "value": "qwen3.8-max" },
+            { "label": "Qwen 3.7 Max", "value": "qwen3.7-max" },
+            { "label": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
+            { "label": "Qwen 3.7 Flash", "value": "qwen3.7-flash" },
+            { "label": "Qwen 3.6 Plus", "value": "qwen3.6-plus" },
+            { "label": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
+            { "label": "Qwen 3.5 Plus", "value": "qwen3.5-plus" },
+            { "label": "Qwen 3 Max 2026-01-23", "value": "qwen3-max-2026-01-23" },
+            { "label": "Qwen 3 Coder Next", "value": "qwen3-coder-next" },
+            { "label": "Qwen 3 Coder Plus", "value": "qwen3-coder-plus" },
+            { "label": "Kimi K2.5", "value": "kimi-k2.5" },
+            { "label": "GLM 5", "value": "glm-5" },
+            { "label": "GLM 4.7", "value": "glm-4.7" },
+            { "label": "MiniMax M2.5", "value": "MiniMax-M2.5" }
+          ],
+          "description": "qwen3.7-plus works across all three modes. Model availability still depends on the selected plan and region."
+        },
+        {
+          "key": "systemPrompt",
+          "label": "Translation prompt",
+          "control": "textarea",
+          "default": "You are a professional translation engine. Translate faithfully and naturally, preserve paragraphs, line breaks, lists, punctuation, names, numbers, and technical terms. Return only the translated text without explanations, labels, quotes, or Markdown fences."
+        },
+        {
+          "key": "maxTokens",
+          "label": "Max tokens",
+          "control": "integer",
+          "default": 4096
+        },
+        {
+          "key": "stream",
+          "label": "Stream result",
+          "control": "boolean",
+          "default": true
+        },
+        {
+          "key": "enableThinking",
+          "label": "Enable thinking",
+          "control": "boolean",
+          "default": false,
+          "description": "Off by default. Reasoning content is never shown in the translation result."
+        },
+        {
+          "key": "reasoningEffort",
+          "label": "Reasoning effort",
+          "control": "select",
+          "default": "auto",
+          "options": [
+            { "label": "Automatic (model default)", "value": "auto" },
+            { "label": "Low (up to 4K thinking tokens)", "value": "low" },
+            { "label": "Medium (up to 16K thinking tokens)", "value": "medium" },
+            { "label": "High (model maximum)", "value": "high" }
+          ],
+          "description": "Used only when Enable thinking is on. For Chat Completions, the plugin sends a matching thinking_budget instead of the unsupported qwen3.7-plus reasoning_effort parameter."
+        }
+      ]
+    },
+    {
+      "id": "ocr",
+      "providerId": "com.fangjun.manggo-bailian.ocr",
+      "kind": "ocr",
+      "displayName": "百炼 OCR",
+      "entry": "recognize",
+      "icon": "icon.png",
+      "permissions": [
+        "network"
+      ],
+      "language": {
+        "auto": "auto",
+        "en_US": "English",
+        "zh_CN": "Simplified Chinese",
+        "zh_TW": "Traditional Chinese",
+        "ja_JP": "Japanese",
+        "ko_KR": "Korean",
+        "fr_FR": "French",
+        "vi_VN": "Vietnamese",
+        "de_DE": "German",
+        "it_IT": "Italian",
+        "ru_RU": "Russian",
+        "uk_UA": "Ukrainian"
+      },
+      "config": [
+        {
+          "key": "accessMode",
+          "label": "Billing mode",
+          "control": "select",
+          "required": true,
+          "default": "pay_as_you_go",
+          "options": [
+            { "label": "Pay-as-you-go (recommended)", "value": "pay_as_you_go" },
+            { "label": "Coding Plan (eligibility required)", "value": "coding_plan" },
+            { "label": "Token Plan (eligibility required)", "value": "token_plan" }
+          ],
+          "description": "The API Key and Base URL must come from the same billing mode. Coding Plan and Token Plan are officially restricted to eligible interactive AI-tool use."
+        },
+        {
+          "key": "region",
+          "label": "Region",
+          "control": "select",
+          "required": true,
+          "default": "china",
+          "options": [
+            { "label": "China (Beijing)", "value": "china" },
+            { "label": "International (Singapore)", "value": "singapore" }
+          ],
+          "description": "Singapore is available for pay-as-you-go. Coding Plan and Token Plan currently use China (Beijing)."
+        },
+        {
+          "key": "workspaceId",
+          "label": "Workspace ID (optional)",
+          "control": "text",
+          "placeholder": "Your Model Studio workspace ID",
+          "description": "For pay-as-you-go, builds the recommended workspace-specific Base URL. Leave blank to use the shared endpoint."
+        },
+        {
+          "key": "customBaseUrl",
+          "label": "Custom Base URL (optional)",
+          "control": "text",
+          "placeholder": "https://.../compatible-mode/v1",
+          "description": "Overrides billing mode, region, and Workspace ID. HTTPS only."
+        },
+        {
+          "key": "apiKey",
+          "label": "API Key",
+          "control": "password",
+          "required": true,
+          "secret": true,
+          "placeholder": "Paste the key issued for the selected billing mode",
+          "description": "Stored by Manggo and sent only as the Bearer token. Plan keys and pay-as-you-go keys are not interchangeable."
+        },
+        {
+          "key": "model",
+          "label": "Vision model",
+          "control": "select",
+          "editable": true,
+          "required": true,
+          "default": "qwen3.7-plus",
+          "options": [
+            { "label": "Qwen 3.5 OCR (pay-as-you-go only)", "value": "qwen3.5-ocr" },
+            { "label": "Qwen 3.8 Max (pay-as-you-go / Token Plan)", "value": "qwen3.8-max" },
+            { "label": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
+            { "label": "Qwen 3.7 Flash", "value": "qwen3.7-flash" },
+            { "label": "Qwen 3.6 Plus", "value": "qwen3.6-plus" },
+            { "label": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
+            { "label": "Qwen 3.5 Plus", "value": "qwen3.5-plus" },
+            { "label": "Kimi K2.5", "value": "kimi-k2.5" }
+          ],
+          "description": "Choose a model with native image input. qwen3.7-plus works across all three modes; qwen3.5-ocr is pay-as-you-go only."
+        },
+        {
+          "key": "systemPrompt",
+          "label": "OCR prompt",
+          "control": "textarea",
+          "default": "You are a precise OCR transcription engine. Transcribe every visible character without translating, summarizing, correcting, or inventing content. Preserve reading order, paragraphs, lists, and line breaks. Return only the recognized text."
+        },
+        {
+          "key": "maxTokens",
+          "label": "Max tokens",
+          "control": "integer",
+          "default": 8192
+        },
+        {
+          "key": "stream",
+          "label": "Stream result",
+          "control": "boolean",
+          "default": true
+        },
+        {
+          "key": "enableThinking",
+          "label": "Enable thinking",
+          "control": "boolean",
+          "default": false,
+          "description": "Off by default. Reasoning content is never shown in the OCR result."
+        },
+        {
+          "key": "reasoningEffort",
+          "label": "Reasoning effort",
+          "control": "select",
+          "default": "auto",
+          "options": [
+            { "label": "Automatic (model default)", "value": "auto" },
+            { "label": "Low (up to 4K thinking tokens)", "value": "low" },
+            { "label": "Medium (up to 16K thinking tokens)", "value": "medium" },
+            { "label": "High (model maximum)", "value": "high" }
+          ],
+          "description": "Used only when Enable thinking is on. For Chat Completions, the plugin sends a matching thinking_budget instead of the unsupported qwen3.7-plus reasoning_effort parameter."
+        }
+      ]
+    }
+  ]
+}

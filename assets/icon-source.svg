@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Bailian Translation and OCR plugin icon</title>
+  <desc id="desc">An original rounded-square icon combining scan corners and bidirectional translation arrows.</desc>
+  <defs>
+    <linearGradient id="background" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4f46e5"/>
+      <stop offset="0.52" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="164" y1="180" x2="354" y2="334" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="1" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#background)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M116 202v-58c0-15 13-28 28-28h58"/>
+    <path d="M310 116h58c15 0 28 13 28 28v58"/>
+    <path d="M396 310v58c0 15-13 28-28 28h-58"/>
+    <path d="M202 396h-58c-15 0-28-13-28-28v-58"/>
+  </g>
+  <g fill="none" stroke="url(#accent)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M166 222h180"/>
+    <path d="m310 186 36 36-36 36"/>
+    <path d="M346 290H166"/>
+    <path d="m202 254-36 36 36 36"/>
+  </g>
+</svg>
