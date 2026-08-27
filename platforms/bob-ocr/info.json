@@ -1,0 +1,115 @@
+{
+  "identifier": "com.schweppessoda.bailian.ocr",
+  "version": "2.1.0",
+  "category": "ocr",
+  "name": "百炼 OCR",
+  "summary": "Alibaba Cloud Model Studio OCR with pay-as-you-go, Coding Plan, and Token Plan routes.",
+  "author": "SchweppesSoda",
+  "homepage": "https://github.com/SchweppesSoda/manggo-bailian-plugin",
+  "minBobVersion": "1.8.0",
+  "options": [
+    {
+      "identifier": "accessMode",
+      "type": "menu",
+      "title": "Billing mode",
+      "defaultValue": "pay_as_you_go",
+      "menuValues": [
+        { "title": "Pay-as-you-go (recommended)", "value": "pay_as_you_go" },
+        { "title": "Coding Plan (eligibility required)", "value": "coding_plan" },
+        { "title": "Token Plan (eligibility required)", "value": "token_plan" }
+      ],
+      "desc": "The Base URL and API Key must belong to the same mode. Plan routes are limited by Alibaba Cloud eligibility and service terms."
+    },
+    {
+      "identifier": "region",
+      "type": "menu",
+      "title": "Region",
+      "defaultValue": "china",
+      "menuValues": [
+        { "title": "China (Beijing)", "value": "china" },
+        { "title": "International (Singapore, pay-as-you-go)", "value": "singapore" }
+      ]
+    },
+    {
+      "identifier": "workspaceId",
+      "type": "text",
+      "title": "Workspace ID (optional)",
+      "textConfig": { "type": "visible", "placeholderText": "Model Studio workspace ID" }
+    },
+    {
+      "identifier": "customBaseUrl",
+      "type": "text",
+      "title": "Custom Base URL (advanced)",
+      "textConfig": { "type": "visible", "placeholderText": "https://.../compatible-mode/v1" },
+      "desc": "Overrides mode, region, and Workspace ID. Your API Key will be sent to this HTTPS endpoint."
+    },
+    {
+      "identifier": "apiKey",
+      "type": "text",
+      "title": "API Key",
+      "textConfig": { "type": "secure", "placeholderText": "Key issued for the selected billing mode" }
+    },
+    {
+      "identifier": "modelPreset",
+      "type": "menu",
+      "title": "Model preset",
+      "defaultValue": "qwen3.7-plus",
+      "menuValues": [
+        { "title": "Qwen 3.7 Plus (all routes)", "value": "qwen3.7-plus" },
+        { "title": "Qwen 3.5 OCR (pay-as-you-go)", "value": "qwen3.5-ocr" },
+        { "title": "Qwen 3.8 Max", "value": "qwen3.8-max" },
+        { "title": "Qwen 3.7 Flash", "value": "qwen3.7-flash" },
+        { "title": "Qwen 3.6 Plus", "value": "qwen3.6-plus" },
+        { "title": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
+        { "title": "Qwen 3.5 Plus", "value": "qwen3.5-plus" },
+        { "title": "Kimi K2.5", "value": "kimi-k2.5" }
+      ]
+    },
+    {
+      "identifier": "customModel",
+      "type": "text",
+      "title": "Custom model ID (optional)",
+      "textConfig": { "type": "visible", "placeholderText": "Overrides the model preset" }
+    },
+    {
+      "identifier": "maxTokens",
+      "type": "text",
+      "title": "Max output tokens",
+      "defaultValue": "8192",
+      "textConfig": { "type": "visible", "placeholderText": "8192" }
+    },
+    {
+      "identifier": "enableThinking",
+      "type": "menu",
+      "title": "Enable thinking",
+      "defaultValue": "false",
+      "menuValues": [
+        { "title": "Off (recommended)", "value": "false" },
+        { "title": "On", "value": "true" }
+      ]
+    },
+    {
+      "identifier": "reasoningEffort",
+      "type": "menu",
+      "title": "Reasoning effort",
+      "defaultValue": "auto",
+      "menuValues": [
+        { "title": "Automatic", "value": "auto" },
+        { "title": "Low", "value": "low" },
+        { "title": "Medium", "value": "medium" },
+        { "title": "High", "value": "high" }
+      ],
+      "desc": "Used only when thinking is enabled and supported by the selected model."
+    },
+    {
+      "identifier": "systemPrompt",
+      "type": "text",
+      "title": "System prompt (generic vision models only)",
+      "textConfig": {
+        "type": "visible",
+        "height": 80,
+        "placeholderText": "Leave empty to use the built-in OCR instruction"
+      }
+    }
+  ]
+}

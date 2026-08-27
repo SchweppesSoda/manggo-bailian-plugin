@@ -15,6 +15,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install build dependency
+        run: npm ci
+      - name: Build runtime artifacts
+        run: npm run build
       - name: Test
         run: node --test
       - name: Package
@@ -23,5 +27,22 @@ jobs:
       - name: Upload plugin package
         uses: actions/upload-artifact@v4
         with:
-          name: manggo-bailian-plugin
-          path: dist/*.mplugin
+          name: bailian-plugin-packages
+          path: |
+            dist/*.mplugin
+            dist/*.bobplugin
+            dist/SHA256SUMS.txt
+
+  bob-contract-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install build dependency
+        run: npm ci
+      - name: Build JavaScriptCore-facing artifacts
+        run: npm run build
+      - name: Run Core and Bob adapter contract tests
+        run: node --test tests/core.test.mjs tests/bob-translate.test.mjs tests/bob-ocr-image.test.mjs tests/bob-ocr-plugin.test.mjs

@@ -1,0 +1,180 @@
+{
+  "identifier": "com.schweppessoda.bailian.translate",
+  "version": "2.1.0",
+  "category": "translate",
+  "name": "百炼翻译",
+  "summary": "通过阿里云百炼 Model Studio 翻译文本。支持按量付费、Coding Plan 和 Token Plan。",
+  "author": "SchweppesSoda",
+  "homepage": "https://github.com/SchweppesSoda/manggo-bailian-plugin",
+  "minBobVersion": "1.8.0",
+  "options": [
+    {
+      "identifier": "apiKey",
+      "type": "text",
+      "title": "Alibaba Cloud Model Studio API Key",
+      "textConfig": {
+        "type": "secure",
+        "placeholderText": "sk-..."
+      },
+      "desc": "Stored by Bob as this plugin's setting. Do not share this key."
+    },
+    {
+      "identifier": "accessMode",
+      "type": "menu",
+      "title": "Billing mode",
+      "defaultValue": "pay_as_you_go",
+      "menuValues": [
+        {
+          "title": "Pay-as-you-go",
+          "value": "pay_as_you_go"
+        },
+        {
+          "title": "Coding Plan",
+          "value": "coding_plan"
+        },
+        {
+          "title": "Token Plan",
+          "value": "token_plan"
+        }
+      ],
+      "desc": "Select the plan that issued this API Key. Coding Plan and Token Plan require Alibaba Cloud eligibility and compliant interactive use."
+    },
+    {
+      "identifier": "region",
+      "type": "menu",
+      "title": "Pay-as-you-go region",
+      "defaultValue": "china",
+      "menuValues": [
+        {
+          "title": "China (Beijing)",
+          "value": "china"
+        },
+        {
+          "title": "Singapore",
+          "value": "singapore"
+        }
+      ],
+      "desc": "Only applies to Pay-as-you-go automatic endpoints."
+    },
+    {
+      "identifier": "workspaceId",
+      "type": "text",
+      "title": "Workspace ID",
+      "textConfig": {
+        "type": "visible",
+        "placeholderText": "Optional, for a dedicated Model Studio workspace endpoint"
+      },
+      "desc": "Used only with Pay-as-you-go automatic endpoints."
+    },
+    {
+      "identifier": "customBaseUrl",
+      "type": "text",
+      "title": "Custom Base URL",
+      "textConfig": {
+        "type": "visible",
+        "placeholderText": "https://example.com/v1"
+      },
+      "desc": "Must use HTTPS. Your API Key will be sent to this URL; use only an endpoint you trust."
+    },
+    {
+      "identifier": "modelPreset",
+      "type": "menu",
+      "title": "Model",
+      "defaultValue": "qwen3.7-plus",
+      "menuValues": [
+        {
+          "title": "Qwen3.7 Plus (recommended)",
+          "value": "qwen3.7-plus"
+        },
+        {
+          "title": "Qwen MT Plus (translation specialist)",
+          "value": "qwen-mt-plus"
+        },
+        {
+          "title": "Qwen3.8 Max",
+          "value": "qwen3.8-max"
+        },
+        {
+          "title": "Qwen3 Coder Plus",
+          "value": "qwen3-coder-plus"
+        },
+        {
+          "title": "MiniMax M2.5",
+          "value": "MiniMax-M2.5"
+        },
+        {
+          "title": "Kimi K2.5",
+          "value": "kimi-k2.5"
+        },
+        {
+          "title": "GLM-4.7",
+          "value": "glm-4.7"
+        }
+      ],
+      "desc": "Use Custom model below to override this selection."
+    },
+    {
+      "identifier": "customModel",
+      "type": "text",
+      "title": "Custom model",
+      "textConfig": {
+        "type": "visible",
+        "placeholderText": "Optional exact model ID"
+      },
+      "desc": "When filled, this value takes priority over Model. Leave thinking off for unlisted models."
+    },
+    {
+      "identifier": "enableThinking",
+      "type": "menu",
+      "title": "Enable thinking",
+      "defaultValue": "off",
+      "menuValues": [
+        {
+          "title": "Off",
+          "value": "off"
+        },
+        {
+          "title": "On",
+          "value": "on"
+        }
+      ],
+      "desc": "Model thinking is never displayed in Bob's translation result. Unsupported models reject this setting safely."
+    },
+    {
+      "identifier": "reasoningEffort",
+      "type": "menu",
+      "title": "Reasoning effort",
+      "defaultValue": "auto",
+      "menuValues": [
+        {
+          "title": "Automatic",
+          "value": "auto"
+        },
+        {
+          "title": "Low",
+          "value": "low"
+        },
+        {
+          "title": "Medium",
+          "value": "medium"
+        },
+        {
+          "title": "High",
+          "value": "high"
+        }
+      ],
+      "desc": "Only used when Enable thinking is on and the selected model supports configurable effort."
+    },
+    {
+      "identifier": "maxTokens",
+      "type": "text",
+      "title": "Max tokens",
+      "defaultValue": "4096",
+      "textConfig": {
+        "type": "visible",
+        "placeholderText": "1–131072"
+      },
+      "desc": "Maximum output tokens. A positive integer from 1 to 131072."
+    }
+  ]
+}

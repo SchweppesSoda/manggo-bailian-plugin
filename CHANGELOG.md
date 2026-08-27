@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0 - 2026-08-27
+
+- Refactor billing, language, thinking, request, response, and redaction behavior into a platform-neutral Core.
+- Keep the Manggo translation and OCR services in one `.mplugin` without changing their external service contract.
+- Add independent Bob 1.8+ translation and OCR packages with secure settings and three billing modes.
+- Add cumulative SSE translation streaming, cancellation support, Qwen-MT full-language-name requests, and non-streaming Bob OCR rows.
+- Build and validate all three packages with one version and a SHA-256 checksum manifest.
+- Mark Bob distribution as Beta until macOS Bob installation, streaming cancellation, and image-upload tests are completed.
+
 ## 2.0.0 - 2026-08-27
 
 - Add explicit pay-as-you-go, Coding Plan, and Token Plan billing modes.

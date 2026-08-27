@@ -1,4 +1,5 @@
 dist/
 node_modules/
 *.log
-
+platforms/bob-*/lib/*.cjs
+platforms/bob-*/lib/**/*.cjs

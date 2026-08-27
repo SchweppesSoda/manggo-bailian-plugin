@@ -1,25 +1,28 @@
 # Contributing
 
-Thank you for helping improve the Manggo Bailian plugin.
+Thank you for helping improve the Manggo and Bob Bailian plugins.
 
 ## Before opening a change
 
 - Never include API keys, screenshots containing keys, or private endpoint details.
-- Keep the plugin dependency-free and compatible with the Manggo plugin runtime.
+- Keep runtime code dependency-free. Shared Core must remain platform-neutral; Manggo-only APIs belong in `src/manggo/`, and Bob JavaScriptCore APIs belong in `src/bob/`.
 - Use official Alibaba Cloud Model Studio documentation as the source of truth for endpoints and request fields.
+- Do not claim Bob support is stable without a macOS Bob 1.8+ installation test.
 
 ## Local checks
 
-Run the test suite:
+Install the locked build dependency, build generated adapters, and run the test suite:
 
 ```powershell
-& "C:\Program Files\nodejs\node.exe" --test
+npm ci
+npm run build
+npm test
 ```
 
-Build the installable package:
+Build all three installable packages and their SHA-256 manifest:
 
 ```powershell
-pwsh -NoProfile -File scripts/package.ps1
+npm run package
 ```
 
 Please update `CHANGELOG.md` when a user-visible behavior changes.
