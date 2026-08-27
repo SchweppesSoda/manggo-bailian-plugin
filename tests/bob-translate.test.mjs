@@ -80,7 +80,8 @@ test("Bob translate manifest uses a secure key, explicit plans, model override, 
 
   assert.equal(manifest.category, "translate");
   assert.equal(manifest.minBobVersion, "1.8.0");
-  assert.equal("appcast" in manifest, false, "Beta package must not point to an unpublished appcast");
+  assert.equal(manifest.homepage, "https://github.com/SchweppesSoda/bob-bailian-translate");
+  assert.equal(manifest.appcast, "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-translate/main/appcast.json");
   assert.match(manifest.identifier, /^[a-z0-9.]+$/);
   assert.equal(configs.apiKey.textConfig.type, "secure");
   assert.deepEqual(configs.accessMode.menuValues.map((item) => item.value), [

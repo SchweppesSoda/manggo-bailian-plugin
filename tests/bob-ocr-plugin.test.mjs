@@ -123,7 +123,8 @@ test("Bob OCR metadata is an independent secure OCR plugin", async () => {
   assert.equal(info.category, "ocr");
   assert.equal(info.version, "2.1.0");
   assert.equal(info.minBobVersion, "1.8.0");
-  assert.equal("appcast" in info, false, "Beta package must not point to an unpublished appcast");
+  assert.equal(info.homepage, "https://github.com/SchweppesSoda/bob-bailian-ocr");
+  assert.equal(info.appcast, "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-ocr/main/appcast.json");
   const apiKey = info.options.find((item) => item.identifier === "apiKey");
   assert.equal(apiKey.textConfig.type, "secure");
   assert.equal(info.options.find((item) => item.identifier === "enableThinking").type, "menu");

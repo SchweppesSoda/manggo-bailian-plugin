@@ -5,7 +5,8 @@
   "name": "百炼 OCR",
   "summary": "Alibaba Cloud Model Studio OCR with pay-as-you-go, Coding Plan, and Token Plan routes.",
   "author": "SchweppesSoda",
-  "homepage": "https://github.com/SchweppesSoda/manggo-bailian-plugin",
+  "homepage": "https://github.com/SchweppesSoda/bob-bailian-ocr",
+  "appcast": "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-ocr/main/appcast.json",
   "minBobVersion": "1.8.0",
   "options": [
     {

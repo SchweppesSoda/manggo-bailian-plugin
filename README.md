@@ -12,7 +12,7 @@
 
 三个包共享同一套阿里云百炼路由、模型思考规则、请求体、响应解析和错误脱敏逻辑，但分别使用 Manggo Bun 与 Bob JavaScriptCore 的原生网络接口。所有请求都在本地插件运行时使用用户自己的 API Key 直连百炼；本项目不提供中转服务，也不收集文本、图片或凭据。
 
-> Bob 状态：代码、模拟宿主测试和安装包结构检查已完成；在 macOS Bob 真机完成安装、流式取消和 OCR 图片上传测试前，Bob 包只作为 Beta 预发布，不提交 Bob 官方插件索引。
+> Bob 状态：两个独立发布仓库、稳定 Release、appcast 和 `bobplugin` 索引 Topic 已配置。代码、macOS 合约测试和安装包结构检查已完成；真实 Bob 应用内的安装、流式取消和 OCR 图片上传测试仍待补充，当前请按 Early Access 使用。
 
 ## 下载与安装
 
@@ -24,7 +24,7 @@
 
 ### Bob
 
-翻译和 OCR 是两个独立 `.bobplugin`，按需双击安装。两者的设置也相互独立，需要分别选择计费模式、模型并填写 API Key。
+翻译和 OCR 是两个独立 `.bobplugin`，分别从 [Bob 百炼翻译](https://github.com/SchweppesSoda/bob-bailian-translate/releases/latest) 和 [Bob 百炼 OCR](https://github.com/SchweppesSoda/bob-bailian-ocr/releases/latest) 下载并按需双击安装。两者的设置相互独立，需要分别选择计费模式、模型并填写 API Key。
 
 Bob 插件使用 secure 类型保存 API Key。配置校验只做本地检查，不发送模型请求，也不产生调用费用。
 
@@ -106,12 +106,12 @@ platforms/bob-*/       两个 Bob 包的独立 manifest 和生成产物
 
 ## Bob 发布结构
 
-一个 Bob `info.json` 只能声明一个 `category`，根 `appcast.json` 也只能对应一个插件标识。因此本仓库负责全部源码和构建；真机验证通过后，翻译与 OCR 将分别同步到两个只负责发布和索引的薄仓库：
+一个 Bob `info.json` 只能声明一个 `category`，根 `appcast.json` 也只能对应一个插件标识。因此本仓库负责全部源码和构建，翻译与 OCR 分别同步到两个只负责发布和索引的薄仓库：
 
-- `SchweppesSoda/bob-bailian-translate`
-- `SchweppesSoda/bob-bailian-ocr`
+- [`SchweppesSoda/bob-bailian-translate`](https://github.com/SchweppesSoda/bob-bailian-translate)
+- [`SchweppesSoda/bob-bailian-ocr`](https://github.com/SchweppesSoda/bob-bailian-ocr)
 
-两个发布仓库将各自维护根 `appcast.json` 和 `bobplugin` Topic，使 Bob 能把它们索引成两张独立插件卡片。真机验证前不会创建稳定 appcast 或提交官方索引。
+两个发布仓库各自维护根 `appcast.json`、稳定 `.bobplugin` Release 和 `bobplugin` Topic。Bob 第三方插件列表会按日自动抓取，无需额外 PR；首次进入列表可能需要等待下一轮索引更新。
 
 ## 错误排查
 

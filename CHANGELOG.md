@@ -7,7 +7,7 @@
 - Add independent Bob 1.8+ translation and OCR packages with secure settings and three billing modes.
 - Add cumulative SSE translation streaming, cancellation support, Qwen-MT full-language-name requests, and non-streaming Bob OCR rows.
 - Build and validate all three packages with one version and a SHA-256 checksum manifest.
-- Mark Bob distribution as Beta until macOS Bob installation, streaming cancellation, and image-upload tests are completed.
+- Add two independent Bob publishing repositories with stable appcast metadata and automatic `bobplugin` indexing; real Bob host validation remains documented as Early Access.
 
 ## 2.0.0 - 2026-08-27
 
