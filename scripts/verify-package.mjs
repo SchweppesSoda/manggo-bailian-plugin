@@ -4,21 +4,20 @@ import path from "node:path";
 import vm from "node:vm";
 import { pathToFileURL } from "node:url";
 
-const [profile, manggoStage, bobTranslateStage, bobOcrStage] = process.argv.slice(2);
-const codingEnabled = profile === "PersonalCoding";
+const [manggoStage, bobTranslateStage, bobOcrStage] = process.argv.slice(2);
 
 async function verifyManggo() {
   const entry = path.join(manggoStage, "main.js");
-  const plugin = await import(`${pathToFileURL(entry).href}?profile=${encodeURIComponent(profile)}&time=${Date.now()}`);
-  let requested = false;
-  async function invoke(accessMode) {
-    return plugin.translate("test", "English", "Chinese", {
+  const plugin = await import(`${pathToFileURL(entry).href}?time=${Date.now()}`);
+  for (const accessMode of ["coding_plan", "token_plan"]) {
+    let requested = false;
+    const result = await plugin.translate("test", "English", "Chinese", {
       config: {
-      accessMode,
-      apiKey: "profile-verification-key",
-      model: "qwen3.7-plus",
-      region: "china",
-      stream: false,
+        accessMode,
+        apiKey: "package-verification-key",
+        model: "qwen3.7-plus",
+        region: "china",
+        stream: false,
       },
       utils: {
         fetch: async () => {
@@ -29,20 +28,8 @@ async function verifyManggo() {
         },
       },
     });
-  }
-
-  if (codingEnabled) {
-    assert.equal(await invoke("coding_plan"), "ok");
-    assert.equal(await invoke("token_plan"), "ok");
+    assert.equal(result, "ok");
     assert.equal(requested, true);
-  } else {
-    for (const accessMode of ["coding_plan", "token_plan"]) {
-      await assert.rejects(
-        invoke(accessMode),
-        /Coding Plan and Token Plan are disabled in public plugin packages/,
-      );
-    }
-    assert.equal(requested, false);
   }
 }
 
@@ -50,8 +37,8 @@ function loadBob(stage, option) {
   const context = vm.createContext({
     $option: option,
     $http: {
-      request() { throw new Error("profile verification must not spend a request"); },
-      streamRequest() { throw new Error("profile verification must not spend a request"); },
+      request() { throw new Error("package verification must not spend a request"); },
+      streamRequest() { throw new Error("package verification must not spend a request"); },
     },
   });
   const cache = new Map();
@@ -77,19 +64,14 @@ function loadBob(stage, option) {
 function verifyBob(stage, model, accessMode) {
   const plugin = loadBob(stage, {
     accessMode,
-    apiKey: "profile-verification-key",
+    apiKey: "package-verification-key",
     modelPreset: model,
     region: "china",
   });
   const results = [];
   plugin.pluginValidate((value) => results.push(JSON.parse(JSON.stringify(value))));
   assert.equal(results.length, 1);
-  if (codingEnabled) {
-    assert.equal(results[0].result, true);
-  } else {
-    assert.equal(results[0].result, false);
-    assert.match(results[0].error.message, /Coding Plan and Token Plan are disabled in public plugin packages/);
-  }
+  assert.equal(results[0].result, true);
 }
 
 await verifyManggo();
@@ -97,4 +79,4 @@ for (const accessMode of ["coding_plan", "token_plan"]) {
   verifyBob(bobTranslateStage, "qwen3.7-plus", accessMode);
   verifyBob(bobOcrStage, "qwen3.7-plus", accessMode);
 }
-console.log(`Verified ${profile} runtime profile for Manggo, Bob Translate, and Bob OCR.`);
+console.log("Verified single-package billing modes for Manggo, Bob Translate, and Bob OCR.");

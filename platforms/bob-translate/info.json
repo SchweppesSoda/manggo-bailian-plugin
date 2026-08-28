@@ -1,9 +1,9 @@
 {
   "identifier": "com.schweppessoda.bailian.translate",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "category": "translate",
   "name": "百炼翻译",
-  "summary": "通过阿里云百炼 Model Studio 按量付费接口翻译文本。",
+  "summary": "通过阿里云百炼 Model Studio 按量付费、Coding Plan 或 Token Plan 翻译文本。",
   "author": "SchweppesSoda",
   "homepage": "https://github.com/SchweppesSoda/bob-bailian-translate",
   "appcast": "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-translate/main/appcast.json",
@@ -28,9 +28,17 @@
         {
           "title": "Pay-as-you-go",
           "value": "pay_as_you_go"
+        },
+        {
+          "title": "Coding Plan",
+          "value": "coding_plan"
+        },
+        {
+          "title": "Token Plan",
+          "value": "token_plan"
         }
       ],
-      "desc": "Public packages use the pay-as-you-go API. Alibaba Cloud prohibits Coding Plan and Token Plan in custom applications."
+      "desc": "Choose the billing mode that issued this API Key. Each mode uses its own official endpoint."
     },
     {
       "identifier": "region",
@@ -78,6 +86,42 @@
         {
           "title": "Qwen3.7 Plus",
           "value": "qwen3.7-plus"
+        },
+        {
+          "title": "Qwen3.6 Plus",
+          "value": "qwen3.6-plus"
+        },
+        {
+          "title": "Qwen3.5 Plus",
+          "value": "qwen3.5-plus"
+        },
+        {
+          "title": "Kimi K2.5",
+          "value": "kimi-k2.5"
+        },
+        {
+          "title": "GLM 5",
+          "value": "glm-5"
+        },
+        {
+          "title": "MiniMax M2.5",
+          "value": "MiniMax-M2.5"
+        },
+        {
+          "title": "Qwen3 Max 2026-01-23",
+          "value": "qwen3-max-2026-01-23"
+        },
+        {
+          "title": "Qwen3 Coder Next",
+          "value": "qwen3-coder-next"
+        },
+        {
+          "title": "Qwen3 Coder Plus",
+          "value": "qwen3-coder-plus"
+        },
+        {
+          "title": "GLM 4.7",
+          "value": "glm-4.7"
         },
         {
           "title": "Qwen3.8 Max",

@@ -2,8 +2,8 @@
   "manifestVersion": 1,
   "id": "com.fangjun.manggo-bailian",
   "name": "Bailian Translation & OCR",
-  "version": "2.2.1",
-  "description": "Manggo translation and OCR services for Alibaba Cloud Model Studio pay-as-you-go.",
+  "version": "2.3.0",
+  "description": "Manggo translation and OCR services for Alibaba Cloud Model Studio pay-as-you-go, Coding Plan, and Token Plan.",
   "author": "Fang Jun",
   "homepage": "https://github.com/SchweppesSoda/manggo-bailian-plugin",
   "icon": "icon.png",
@@ -49,9 +49,11 @@
           "required": true,
           "default": "pay_as_you_go",
           "options": [
-            { "label": "Pay-as-you-go", "value": "pay_as_you_go" }
+            { "label": "Pay-as-you-go", "value": "pay_as_you_go" },
+            { "label": "Coding Plan", "value": "coding_plan" },
+            { "label": "Token Plan", "value": "token_plan" }
           ],
-          "description": "Public packages use the pay-as-you-go API. Alibaba Cloud prohibits Coding Plan and Token Plan in custom applications."
+          "description": "Choose the billing mode that issued this API Key. Each mode uses its own official endpoint."
         },
         {
           "key": "region",
@@ -97,6 +99,15 @@
           "default": "qwen3.7-plus",
           "options": [
             { "label": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
+            { "label": "Qwen 3.6 Plus", "value": "qwen3.6-plus" },
+            { "label": "Qwen 3.5 Plus", "value": "qwen3.5-plus" },
+            { "label": "Kimi K2.5", "value": "kimi-k2.5" },
+            { "label": "GLM 5", "value": "glm-5" },
+            { "label": "MiniMax M2.5", "value": "MiniMax-M2.5" },
+            { "label": "Qwen 3 Max 2026-01-23", "value": "qwen3-max-2026-01-23" },
+            { "label": "Qwen 3 Coder Next", "value": "qwen3-coder-next" },
+            { "label": "Qwen 3 Coder Plus", "value": "qwen3-coder-plus" },
+            { "label": "GLM 4.7", "value": "glm-4.7" },
             { "label": "Qwen 3.8 Max", "value": "qwen3.8-max" },
             { "label": "Qwen 3.8 Flash", "value": "qwen3.8-flash" },
             { "label": "Qwen 3.7 Max", "value": "qwen3.7-max" },
@@ -104,7 +115,7 @@
             { "label": "Qwen MT Plus (pay-as-you-go only)", "value": "qwen-mt-plus" },
             { "label": "Qwen 3.7 Flash (pay-as-you-go only)", "value": "qwen3.7-flash" }
           ],
-          "description": "Model availability depends on the selected pay-as-you-go region."
+          "description": "Model availability depends on the selected billing mode and region."
         },
         {
           "key": "systemPrompt",
@@ -178,9 +189,11 @@
           "required": true,
           "default": "pay_as_you_go",
           "options": [
-            { "label": "Pay-as-you-go", "value": "pay_as_you_go" }
+            { "label": "Pay-as-you-go", "value": "pay_as_you_go" },
+            { "label": "Coding Plan", "value": "coding_plan" },
+            { "label": "Token Plan", "value": "token_plan" }
           ],
-          "description": "Public packages use the pay-as-you-go API. Alibaba Cloud prohibits Coding Plan and Token Plan in custom applications."
+          "description": "Choose the billing mode that issued this API Key. Each mode uses its own official endpoint."
         },
         {
           "key": "region",
@@ -226,13 +239,16 @@
           "default": "qwen3.7-plus",
           "options": [
             { "label": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
+            { "label": "Qwen 3.6 Plus", "value": "qwen3.6-plus" },
+            { "label": "Qwen 3.5 Plus", "value": "qwen3.5-plus" },
+            { "label": "Kimi K2.5", "value": "kimi-k2.5" },
             { "label": "Qwen 3.8 Max", "value": "qwen3.8-max" },
             { "label": "Qwen 3.8 Flash", "value": "qwen3.8-flash" },
             { "label": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
             { "label": "Qwen 3.5 OCR (pay-as-you-go only)", "value": "qwen3.5-ocr" },
             { "label": "Qwen 3.7 Flash (pay-as-you-go only)", "value": "qwen3.7-flash" }
           ],
-          "description": "Choose a pay-as-you-go model with native image input; qwen3.5-ocr is optimized for OCR."
+          "description": "Choose a vision-capable model supported by the selected billing mode; qwen3.5-ocr is pay-as-you-go only."
         },
         {
           "key": "systemPrompt",

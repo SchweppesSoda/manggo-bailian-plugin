@@ -1,9 +1,9 @@
 {
   "identifier": "com.schweppessoda.bailian.ocr",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "category": "ocr",
   "name": "百炼 OCR",
-  "summary": "Alibaba Cloud Model Studio OCR through its pay-as-you-go route.",
+  "summary": "Alibaba Cloud Model Studio OCR through pay-as-you-go, Coding Plan, or Token Plan.",
   "author": "SchweppesSoda",
   "homepage": "https://github.com/SchweppesSoda/bob-bailian-ocr",
   "appcast": "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-ocr/main/appcast.json",
@@ -15,9 +15,11 @@
       "title": "Billing mode",
       "defaultValue": "pay_as_you_go",
       "menuValues": [
-        { "title": "Pay-as-you-go", "value": "pay_as_you_go" }
+        { "title": "Pay-as-you-go", "value": "pay_as_you_go" },
+        { "title": "Coding Plan", "value": "coding_plan" },
+        { "title": "Token Plan", "value": "token_plan" }
       ],
-      "desc": "Public packages use the pay-as-you-go API. Alibaba Cloud prohibits Coding Plan and Token Plan in custom applications."
+      "desc": "Choose the billing mode that issued this API Key. Each mode uses its own official endpoint."
     },
     {
       "identifier": "region",
@@ -55,6 +57,9 @@
       "defaultValue": "qwen3.7-plus",
       "menuValues": [
         { "title": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
+        { "title": "Qwen 3.6 Plus", "value": "qwen3.6-plus" },
+        { "title": "Qwen 3.5 Plus", "value": "qwen3.5-plus" },
+        { "title": "Kimi K2.5", "value": "kimi-k2.5" },
         { "title": "Qwen 3.8 Max", "value": "qwen3.8-max" },
         { "title": "Qwen 3.8 Flash", "value": "qwen3.8-flash" },
         { "title": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },

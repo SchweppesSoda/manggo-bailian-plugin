@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.0 - 2026-08-28
+
+- Replace the public/personal package split with one package per host that exposes pay-as-you-go, Coding Plan, and Token Plan while keeping pay-as-you-go as the default.
+- Remove runtime profile markers and profile-specific packaging without changing the existing routing, model validation, streaming, cancellation, thinking, or OCR request behavior.
+- Add the STranslate implementation as an independently maintained companion repository and package.
+
 ## 2.2.1 - 2026-08-28
 
 - Restrict public Manggo and Bob packages to pay-as-you-go after the current Alibaba Cloud terms were verified to prohibit both Coding Plan and Token Plan in custom applications.
