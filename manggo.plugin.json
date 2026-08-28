@@ -2,8 +2,8 @@
   "manifestVersion": 1,
   "id": "com.fangjun.manggo-bailian",
   "name": "Bailian Translation & OCR",
-  "version": "2.1.0",
-  "description": "Manggo translation and OCR services for Alibaba Cloud Model Studio pay-as-you-go, Coding Plan, and Token Plan.",
+  "version": "2.2.0",
+  "description": "Manggo translation and OCR services for Alibaba Cloud Model Studio pay-as-you-go and Token Plan.",
   "author": "Fang Jun",
   "homepage": "https://github.com/SchweppesSoda/manggo-bailian-plugin",
   "icon": "icon.png",
@@ -49,11 +49,10 @@
           "required": true,
           "default": "pay_as_you_go",
           "options": [
-            { "label": "Pay-as-you-go (recommended)", "value": "pay_as_you_go" },
-            { "label": "Coding Plan (eligibility required)", "value": "coding_plan" },
-            { "label": "Token Plan (eligibility required)", "value": "token_plan" }
+            { "label": "Pay-as-you-go", "value": "pay_as_you_go" },
+            { "label": "Token Plan (Personal Edition)", "value": "token_plan" }
           ],
-          "description": "The API Key and Base URL must come from the same billing mode. Coding Plan and Token Plan are officially restricted to eligible interactive AI-tool use."
+          "description": "The API Key and Base URL must come from the same billing mode. The public package does not expose Coding Plan because Alibaba Cloud prohibits it in custom applications."
         },
         {
           "key": "region",
@@ -65,7 +64,7 @@
             { "label": "China (Beijing)", "value": "china" },
             { "label": "International (Singapore)", "value": "singapore" }
           ],
-          "description": "Singapore is available for pay-as-you-go. Coding Plan and Token Plan currently use China (Beijing)."
+          "description": "Singapore is available for pay-as-you-go. Token Plan currently uses China (Beijing)."
         },
         {
           "key": "workspaceId",
@@ -79,7 +78,7 @@
           "label": "Custom Base URL (optional)",
           "control": "text",
           "placeholder": "https://.../compatible-mode/v1",
-          "description": "Overrides billing mode, region, and Workspace ID. HTTPS only."
+          "description": "Advanced pay-as-you-go override. Token Plan uses its official Base URL. HTTPS only."
         },
         {
           "key": "apiKey",
@@ -98,23 +97,15 @@
           "required": true,
           "default": "qwen3.7-plus",
           "options": [
-            { "label": "Qwen MT Plus (pay-as-you-go only)", "value": "qwen-mt-plus" },
+            { "label": "Qwen 3.7 Plus (pay-as-you-go / Token Plan)", "value": "qwen3.7-plus" },
             { "label": "Qwen 3.8 Max (pay-as-you-go / Token Plan)", "value": "qwen3.8-max" },
-            { "label": "Qwen 3.7 Max", "value": "qwen3.7-max" },
-            { "label": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
-            { "label": "Qwen 3.7 Flash", "value": "qwen3.7-flash" },
-            { "label": "Qwen 3.6 Plus", "value": "qwen3.6-plus" },
-            { "label": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
-            { "label": "Qwen 3.5 Plus", "value": "qwen3.5-plus" },
-            { "label": "Qwen 3 Max 2026-01-23", "value": "qwen3-max-2026-01-23" },
-            { "label": "Qwen 3 Coder Next", "value": "qwen3-coder-next" },
-            { "label": "Qwen 3 Coder Plus", "value": "qwen3-coder-plus" },
-            { "label": "Kimi K2.5", "value": "kimi-k2.5" },
-            { "label": "GLM 5", "value": "glm-5" },
-            { "label": "GLM 4.7", "value": "glm-4.7" },
-            { "label": "MiniMax M2.5", "value": "MiniMax-M2.5" }
+            { "label": "Qwen 3.8 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.8-flash" },
+            { "label": "Qwen 3.7 Max (pay-as-you-go / Token Plan)", "value": "qwen3.7-max" },
+            { "label": "Qwen 3.6 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.6-flash" },
+            { "label": "Qwen MT Plus (pay-as-you-go only)", "value": "qwen-mt-plus" },
+            { "label": "Qwen 3.7 Flash (pay-as-you-go only)", "value": "qwen3.7-flash" }
           ],
-          "description": "qwen3.7-plus works across all three modes. Model availability still depends on the selected plan and region."
+          "description": "Token Plan selections are checked against the dated official model list before any request."
         },
         {
           "key": "systemPrompt",
@@ -188,11 +179,10 @@
           "required": true,
           "default": "pay_as_you_go",
           "options": [
-            { "label": "Pay-as-you-go (recommended)", "value": "pay_as_you_go" },
-            { "label": "Coding Plan (eligibility required)", "value": "coding_plan" },
-            { "label": "Token Plan (eligibility required)", "value": "token_plan" }
+            { "label": "Pay-as-you-go", "value": "pay_as_you_go" },
+            { "label": "Token Plan (Personal Edition)", "value": "token_plan" }
           ],
-          "description": "The API Key and Base URL must come from the same billing mode. Coding Plan and Token Plan are officially restricted to eligible interactive AI-tool use."
+          "description": "The API Key and Base URL must come from the same billing mode. The public package does not expose Coding Plan because Alibaba Cloud prohibits it in custom applications."
         },
         {
           "key": "region",
@@ -204,7 +194,7 @@
             { "label": "China (Beijing)", "value": "china" },
             { "label": "International (Singapore)", "value": "singapore" }
           ],
-          "description": "Singapore is available for pay-as-you-go. Coding Plan and Token Plan currently use China (Beijing)."
+          "description": "Singapore is available for pay-as-you-go. Token Plan currently uses China (Beijing)."
         },
         {
           "key": "workspaceId",
@@ -218,7 +208,7 @@
           "label": "Custom Base URL (optional)",
           "control": "text",
           "placeholder": "https://.../compatible-mode/v1",
-          "description": "Overrides billing mode, region, and Workspace ID. HTTPS only."
+          "description": "Advanced pay-as-you-go override. Token Plan uses its official Base URL. HTTPS only."
         },
         {
           "key": "apiKey",
@@ -237,16 +227,14 @@
           "required": true,
           "default": "qwen3.7-plus",
           "options": [
-            { "label": "Qwen 3.5 OCR (pay-as-you-go only)", "value": "qwen3.5-ocr" },
+            { "label": "Qwen 3.7 Plus (pay-as-you-go / Token Plan)", "value": "qwen3.7-plus" },
             { "label": "Qwen 3.8 Max (pay-as-you-go / Token Plan)", "value": "qwen3.8-max" },
-            { "label": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
-            { "label": "Qwen 3.7 Flash", "value": "qwen3.7-flash" },
-            { "label": "Qwen 3.6 Plus", "value": "qwen3.6-plus" },
-            { "label": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
-            { "label": "Qwen 3.5 Plus", "value": "qwen3.5-plus" },
-            { "label": "Kimi K2.5", "value": "kimi-k2.5" }
+            { "label": "Qwen 3.8 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.8-flash" },
+            { "label": "Qwen 3.6 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.6-flash" },
+            { "label": "Qwen 3.5 OCR (pay-as-you-go only)", "value": "qwen3.5-ocr" },
+            { "label": "Qwen 3.7 Flash (pay-as-you-go only)", "value": "qwen3.7-flash" }
           ],
-          "description": "Choose a model with native image input. qwen3.7-plus works across all three modes; qwen3.5-ocr is pay-as-you-go only."
+          "description": "Choose a model with native image input. Token Plan selections are checked before any request; qwen3.5-ocr is pay-as-you-go only."
         },
         {
           "key": "systemPrompt",
@@ -259,6 +247,18 @@
           "label": "Max tokens",
           "control": "integer",
           "default": 8192
+        },
+        {
+          "key": "ocrResolution",
+          "label": "OCR resolution",
+          "control": "select",
+          "default": "auto",
+          "options": [
+            { "label": "Auto (recommended)", "value": "auto" },
+            { "label": "Fast (lower detail)", "value": "fast" },
+            { "label": "High (small text)", "value": "high" }
+          ],
+          "description": "For supported Qwen vision models. Fast reduces visual processing but may miss small text; it does not reduce upload size."
         },
         {
           "key": "stream",

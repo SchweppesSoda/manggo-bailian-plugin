@@ -40,7 +40,7 @@ function pngData() {
   };
 }
 
-function createHarness({ option = {}, response, requestError } = {}) {
+function createHarness({ option = {}, response, requestError, deferResponse = false } = {}) {
   let request;
   const completions = [];
   const core = {
@@ -60,10 +60,12 @@ function createHarness({ option = {}, response, requestError } = {}) {
     request(value) {
       if (requestError) throw requestError;
       request = value;
-      value.handler(response ?? {
-        response: { statusCode: 200 },
-        data: { choices: [{ message: { content: "第一行\n第二行" } }] },
-      });
+      if (!deferResponse) {
+        value.handler(response ?? {
+          response: { statusCode: 200 },
+          data: { choices: [{ message: { content: "第一行\n第二行" } }] },
+        });
+      }
     },
   };
   const plugin = bobOcr.createBobOcrPlugin({
@@ -74,6 +76,29 @@ function createHarness({ option = {}, response, requestError } = {}) {
     http,
   });
   return { plugin, completions, get request() { return request; } };
+}
+
+function createCancelSignal() {
+  let callback;
+  let disposeCount = 0;
+  return {
+    subscribe(value) {
+      callback = value;
+      return {
+        dispose() {
+          disposeCount += 1;
+          callback = undefined;
+        },
+      };
+    },
+    send() {
+      const current = callback;
+      if (current) current();
+    },
+    get disposeCount() {
+      return disposeCount;
+    },
+  };
 }
 
 test("Bob OCR sends a non-streaming JSON request and returns Bob text rows", () => {
@@ -117,17 +142,39 @@ test("Bob OCR converts synchronous transport failures to one redacted completion
   assert.doesNotMatch(failed.completions[0].error.message, /not-a-real-key/);
 });
 
+test("Bob OCR cancellation suppresses a late HTTP completion", () => {
+  const harness = createHarness({ deferResponse: true });
+  const cancelSignal = createCancelSignal();
+  harness.plugin.ocr({ image: pngData(), from: "en", cancelSignal }, (value) => {
+    harness.completions.push(value);
+  });
+  assert.equal(harness.request.cancelSignal, cancelSignal);
+
+  cancelSignal.send();
+  harness.request.handler({
+    response: { statusCode: 200 },
+    data: { choices: [{ message: { content: "late" } }] },
+  });
+
+  assert.deepEqual(harness.completions, []);
+  assert.equal(cancelSignal.disposeCount, 1);
+});
+
 test("Bob OCR metadata is an independent secure OCR plugin", async () => {
   const info = JSON.parse(await readFile(new URL("../platforms/bob-ocr/info.json", import.meta.url), "utf8"));
   assert.equal(info.identifier, "com.schweppessoda.bailian.ocr");
   assert.equal(info.category, "ocr");
-  assert.equal(info.version, "2.1.0");
+  assert.equal(info.version, "2.2.0");
   assert.equal(info.minBobVersion, "1.8.0");
   assert.equal(info.homepage, "https://github.com/SchweppesSoda/bob-bailian-ocr");
   assert.equal(info.appcast, "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-ocr/main/appcast.json");
   const apiKey = info.options.find((item) => item.identifier === "apiKey");
   assert.equal(apiKey.textConfig.type, "secure");
   assert.equal(info.options.find((item) => item.identifier === "enableThinking").type, "menu");
+  const accessMode = info.options.find((item) => item.identifier === "accessMode");
+  assert.equal(accessMode.defaultValue, "pay_as_you_go");
+  assert.deepEqual(accessMode.menuValues.map((item) => item.value), ["pay_as_you_go", "token_plan"]);
+  assert.equal(info.options.find((item) => item.identifier === "ocrResolution").defaultValue, "auto");
 });
 
 test("built Bob OCR entry loads only package-local JavaScript modules", () => {

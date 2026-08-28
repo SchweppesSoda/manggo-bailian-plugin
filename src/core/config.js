@@ -10,6 +10,11 @@ export const DEFAULTS = Object.freeze({
   model: "qwen3.7-plus",
 });
 
+// Replaced inside packaged runtime files by scripts/package.ps1. Source builds
+// stay permissive for tests and explicit local development; public archives
+// hard-reject Coding Plan even if a host retains an older saved setting.
+const RUNTIME_PROFILE = "__BAILIAN_RUNTIME_PROFILE_DEVELOPMENT__";
+
 const VALID_ACCESS_MODES = Object.freeze({
   pay_as_you_go: true,
   coding_plan: true,
@@ -101,10 +106,18 @@ export function secureBaseUrl(input) {
 }
 
 export function automaticBaseUrl(config = {}) {
-  const custom = nonEmptyText(config.customBaseUrl);
-  if (custom) return secureBaseUrl(custom);
-
   const mode = selectedValue(config.accessMode, DEFAULTS.accessMode, VALID_ACCESS_MODES, "billing mode");
+  if (mode === ACCESS_MODE.CODING && RUNTIME_PROFILE === "__BAILIAN_RUNTIME_PROFILE_PUBLIC__") {
+    throw new Error("Coding Plan is disabled in public plugin packages; use pay-as-you-go or Token Plan.");
+  }
+  const custom = nonEmptyText(config.customBaseUrl);
+  if (custom) {
+    if (mode === ACCESS_MODE.CODING || mode === ACCESS_MODE.TOKEN) {
+      throw new Error("Coding Plan and Token Plan must use their official Base URLs; remove the Custom Base URL.");
+    }
+    return secureBaseUrl(custom);
+  }
+
   const region = selectedValue(config.region, DEFAULTS.region, VALID_REGIONS, "region");
   if (mode === ACCESS_MODE.CODING || mode === ACCESS_MODE.TOKEN) {
     if (region !== "china") {

@@ -29,7 +29,7 @@ function optionsWith(fetchImpl, config = {}, chunks = []) {
   };
 }
 
-test("pay-as-you-go is the default route and qwen3.7-plus thinking defaults off", async () => {
+test("explicit pay-as-you-go uses its route and qwen3.7-plus thinking defaults off", async () => {
   let request;
   const options = optionsWith(async (url, init) => {
     request = { url, init, body: JSON.parse(init.body) };
@@ -75,7 +75,7 @@ test("Coding Plan and Token Plan use isolated official routes", async () => {
   ]);
 });
 
-test("plan routes reject Singapore unless an explicit custom endpoint is supplied", async () => {
+test("plan routes reject Singapore and custom endpoint overrides", async () => {
   let called = false;
   const fetcher = async () => {
     called = true;
@@ -90,16 +90,14 @@ test("plan routes reject Singapore unless an explicit custom endpoint is supplie
   );
   assert.equal(called, false);
 
-  let customUrl;
-  await translate("a", "English", "Chinese", optionsWith(async (url) => {
-    customUrl = url;
-    return jsonResponse("ok");
-  }, {
-    accessMode: "token_plan",
-    region: "singapore",
-    customBaseUrl: "https://future.example/v1",
-  }));
-  assert.equal(customUrl, "https://future.example/v1/chat/completions");
+  await assert.rejects(
+    translate("a", "English", "Chinese", optionsWith(fetcher, {
+      accessMode: "token_plan",
+      region: "china",
+      customBaseUrl: "https://future.example/v1",
+    })),
+    /official Base URLs/,
+  );
 });
 
 test("custom Base URL must be HTTPS and must not contain credentials", async () => {
@@ -261,6 +259,48 @@ test("streaming ignores reasoning_content and emits only result chunks", async (
   }), { stream: true, enableThinking: true }, chunks));
   assert.equal(result, "Hello world");
   assert.deepEqual(chunks, ["Hello", " world"]);
+});
+
+test("Manggo coalesces many SSE deltas while preserving exact incremental output", async () => {
+  const chunks = [];
+  const expected = Array.from({ length: 1000 }, (_, index) => String(index % 10)).join("");
+  const sse = [
+    ...Array.from(expected, (character) => `data: {"choices":[{"delta":{"content":"${character}"},"finish_reason":null}]}`),
+    "data: [DONE]",
+    "",
+  ].join("\n\n");
+  const result = await translate("source", "English", "Chinese", optionsWith(async () => new Response(sse, {
+    status: 200,
+    headers: { "Content-Type": "text/event-stream" },
+  }), { stream: true }, chunks));
+  assert.equal(result, expected);
+  assert.equal(chunks.join(""), expected);
+  assert.ok(chunks.length < 30, `expected fewer than 30 callbacks, received ${chunks.length}`);
+});
+
+test("Manggo parses CRLF SSE and UTF-8 characters across arbitrary byte chunks", async () => {
+  const chunks = [];
+  const sse = [
+    'data: {"choices":[{"delta":{"content":"你"},"finish_reason":null}]}',
+    'data: {"choices":[{"delta":{"content":"好"},"finish_reason":"stop"}]}',
+    "data: [DONE]",
+    "",
+  ].join("\r\n\r\n");
+  const bytes = new TextEncoder().encode(sse);
+  const body = new ReadableStream({
+    start(controller) {
+      for (let index = 0; index < bytes.length; index += 1) {
+        controller.enqueue(bytes.slice(index, index + 1));
+      }
+      controller.close();
+    },
+  });
+  const result = await translate("hello", "English", "Chinese", optionsWith(async () => new Response(body, {
+    status: 200,
+    headers: { "Content-Type": "text/event-stream" },
+  }), { stream: true }, chunks));
+  assert.equal(result, "你好");
+  assert.equal(chunks.join(""), "你好");
 });
 
 test("streaming mode accepts a JSON fallback and preserves outer whitespace", async () => {

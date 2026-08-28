@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.0 - 2026-08-28
+
+- Default public installs to pay-as-you-go with `qwen3.7-plus` and thinking disabled; expose Token Plan with a dated exact model catalog, while keeping the prohibited Coding Plan profile out of public releases and indexes.
+- Add a warning-marked local-only Coding Plan packaging profile for compatibility testing after written approval, plus exact Coding/Token model validation and preflight OCR capability checks.
+- Batch Manggo delta updates and Bob cumulative snapshots while keeping the first visible text immediate and the final text exact.
+- Replace per-event full-result concatenation with chunk arrays and bound Bob's raw error preview.
+- Reject oversized Bob OCR inputs before Base64 allocation, avoid unnecessary Base64 cleanup copies, and add Auto/Fast/High Qwen OCR resolution controls.
+- Subscribe to Bob cancellation signals and suppress every late stream or completion callback after cancellation.
+
 ## 2.1.0 - 2026-08-27
 
 - Refactor billing, language, thinking, request, response, and redaction behavior into a platform-neutral Core.

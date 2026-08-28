@@ -16,6 +16,7 @@ function optionConfig(option) {
     apiKey: stringValue(option.apiKey),
     model: stringValue(option.customModel) || stringValue(option.modelPreset, "qwen3.7-plus"),
     maxTokens: stringValue(option.maxTokens, "8192"),
+    ocrResolution: stringValue(option.ocrResolution, "auto"),
     enableThinking: stringValue(option.enableThinking, "false") === "true",
     reasoningEffort: stringValue(option.reasoningEffort, "auto"),
     systemPrompt: stringValue(option.systemPrompt),
@@ -23,13 +24,51 @@ function optionConfig(option) {
   };
 }
 
-function once(callback) {
+function createCancellation(query) {
+  var cancelled = false;
+  var subscription = null;
+
+  function dispose() {
+    if (!subscription) return;
+    var current = subscription;
+    subscription = null;
+    if (typeof current.dispose === "function") current.dispose();
+  }
+
+  function cancel() {
+    if (cancelled) return;
+    cancelled = true;
+    dispose();
+  }
+
+  var signal = query && query.cancelSignal;
+  if (signal && typeof signal.subscribe === "function") {
+    try {
+      subscription = signal.subscribe(cancel);
+      if (cancelled) dispose();
+    } catch (_) {
+      subscription = null;
+    }
+  }
+
+  return {
+    dispose: dispose,
+    isCancelled: function () { return cancelled; },
+  };
+}
+
+function once(callback, cancellation) {
   var called = false;
-  return function (value) {
-    if (called) return;
+  var invoke = function (value) {
+    if (called || (cancellation && cancellation.isCancelled())) return;
     called = true;
+    if (cancellation) cancellation.dispose();
     callback(value);
   };
+  invoke.isDone = function () {
+    return called || Boolean(cancellation && cancellation.isCancelled());
+  };
+  return invoke;
 }
 
 function safeMessage(value, apiKey) {
@@ -92,7 +131,7 @@ function createBobOcrPlugin(dependencies) {
       return;
     }
     try {
-      if (typeof core.validateConfig === "function") core.validateConfig(config);
+      if (typeof core.validateConfig === "function") core.validateConfig(config, "ocr");
       completion({ result: true });
     } catch (error) {
       completion({ result: false, error: { type: "param", message: safeMessage(error, config.apiKey) } });
@@ -100,7 +139,8 @@ function createBobOcrPlugin(dependencies) {
   }
 
   function ocr(query, completion) {
-    var finish = once(completion);
+    var cancellation = createCancellation(query);
+    var finish = once(completion, cancellation);
     var config = optionConfig(getOption());
     var language;
     var call;
@@ -133,7 +173,9 @@ function createBobOcrPlugin(dependencies) {
         },
         body: call.body,
         timeout: 120,
+        cancelSignal: query && query.cancelSignal,
         handler: function (response) {
+        if (finish.isDone()) return;
         if (response && response.error) {
           finish({ error: { type: "network", message: safeMessage(response.error, config.apiKey) } });
           return;

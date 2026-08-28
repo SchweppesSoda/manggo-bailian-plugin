@@ -5,9 +5,9 @@ import { readFile } from "node:fs/promises";
 const manifest = JSON.parse(await readFile(new URL("../manggo.plugin.json", import.meta.url), "utf8"));
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 
-test("manifest declares a public multi-mode v2 plugin with both services", () => {
+test("manifest declares a public v2 plugin with both services", () => {
   assert.equal(manifest.manifestVersion, 1);
-  assert.equal(manifest.version, "2.1.0");
+  assert.equal(manifest.version, "2.2.0");
   assert.equal(packageJson.version, manifest.version);
   assert.equal(manifest.homepage, "https://github.com/SchweppesSoda/manggo-bailian-plugin");
   assert.deepEqual(manifest.runtime, {
@@ -24,13 +24,13 @@ test("manifest declares a public multi-mode v2 plugin with both services", () =>
   );
 });
 
-test("both services expose all billing modes and protect the API Key", () => {
+test("public services expose pay-as-you-go and Token Plan without Coding Plan", () => {
   for (const service of manifest.services) {
     const configs = Object.fromEntries(service.config.map((item) => [item.key, item]));
     assert.equal(configs.accessMode.default, "pay_as_you_go");
     assert.deepEqual(
       configs.accessMode.options.map((option) => option.value),
-      ["pay_as_you_go", "coding_plan", "token_plan"],
+      ["pay_as_you_go", "token_plan"],
     );
     assert.deepEqual(
       configs.region.options.map((option) => option.value),
@@ -71,8 +71,14 @@ test("translation and OCR presets include pay-as-you-go specialists", () => {
   const ocrModels = ocr.config.find((item) => item.key === "model").options.map((item) => item.value);
   assert.ok(translationModels.includes("qwen-mt-plus"));
   assert.ok(translationModels.includes("qwen3.7-plus"));
+  assert.ok(translationModels.includes("qwen3.8-flash"));
   assert.ok(ocrModels.includes("qwen3.5-ocr"));
   assert.ok(ocrModels.includes("qwen3.7-plus"));
+  assert.ok(ocrModels.includes("qwen3.8-flash"));
+  assert.deepEqual(
+    ocr.config.find((item) => item.key === "ocrResolution").options.map((item) => item.value),
+    ["auto", "fast", "high"],
+  );
 });
 
 test("public repository includes license, security policy, and CI", async () => {
@@ -87,4 +93,5 @@ test("public repository includes license, security policy, and CI", async () => 
   assert.match(workflow, /node --test/);
   assert.match(packageScript, /'LICENSE'/);
   assert.match(packageScript, /'icon\.png'/);
+  assert.match(packageScript, /PersonalCoding/);
 });

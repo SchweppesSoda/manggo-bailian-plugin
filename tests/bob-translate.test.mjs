@@ -29,6 +29,29 @@ function plain(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function createCancelSignal() {
+  let callback;
+  let disposeCount = 0;
+  return {
+    subscribe(value) {
+      callback = value;
+      return {
+        dispose() {
+          disposeCount += 1;
+          callback = undefined;
+        },
+      };
+    },
+    send() {
+      const current = callback;
+      if (current) current();
+    },
+    get disposeCount() {
+      return disposeCount;
+    },
+  };
+}
+
 function createCommonJsLoader(globals = {}) {
   const sandbox = { ...globals };
   const context = vm.createContext(sandbox);
@@ -74,7 +97,7 @@ function loadPlatform(option, http) {
   return loader.context;
 }
 
-test("Bob translate manifest uses a secure key, explicit plans, model override, and menu thinking", async () => {
+test("Bob translate public manifest uses a secure key, public modes, model override, and menu thinking", async () => {
   const manifest = JSON.parse(await readFile(path.join(platformRoot, "info.json"), "utf8"));
   const configs = Object.fromEntries(manifest.options.map((item) => [item.identifier, item]));
 
@@ -86,9 +109,9 @@ test("Bob translate manifest uses a secure key, explicit plans, model override, 
   assert.equal(configs.apiKey.textConfig.type, "secure");
   assert.deepEqual(configs.accessMode.menuValues.map((item) => item.value), [
     "pay_as_you_go",
-    "coding_plan",
     "token_plan",
   ]);
+  assert.equal(configs.accessMode.defaultValue, "pay_as_you_go");
   assert.equal(configs.modelPreset.defaultValue, "qwen3.7-plus");
   assert.equal(configs.customModel.type, "text");
   assert.equal(configs.enableThinking.type, "menu");
@@ -157,6 +180,66 @@ test("streaming crosses chunk boundaries, uses Bob detection, and completes once
   assert.equal(completionResults[0].result.from, "zh-Hans");
   assert.equal(completionResults[0].result.to, "en");
   assert.equal("thinkInfo" in completionResults[0].result, false);
+});
+
+test("Bob coalesces a large number of SSE deltas into bounded cumulative snapshots", () => {
+  const streamResults = [];
+  const completionResults = [];
+  const expected = Array.from({ length: 1000 }, (_, index) => String(index % 10)).join("");
+  const http = {
+    streamRequest(value) {
+      for (const character of expected) {
+        value.streamHandler({
+          text: `data: {"choices":[{"delta":{"content":"${character}"},"finish_reason":null}]}\n\n`,
+        });
+      }
+      value.streamHandler({ text: "data: [DONE]\n\n" });
+      value.handler({ response: { statusCode: 200 } });
+    },
+  };
+  const plugin = loadPlatform(defaultOptions(), http);
+  plugin.translate({
+    text: "source",
+    from: "en",
+    to: "zh-Hans",
+    detectFrom: "en",
+    detectTo: "zh-Hans",
+    onStream: (result) => streamResults.push(result.toParagraphs[0]),
+    onCompletion: (result) => completionResults.push(result.result.toParagraphs[0]),
+  });
+  assert.equal(streamResults.at(-1), expected);
+  assert.deepEqual(completionResults, [expected]);
+  assert.ok(streamResults.length < 30, `expected fewer than 30 snapshots, received ${streamResults.length}`);
+});
+
+test("Bob cancellation suppresses late stream and completion callbacks", () => {
+  let request;
+  const streamResults = [];
+  const completionResults = [];
+  const cancelSignal = createCancelSignal();
+  const plugin = loadPlatform(defaultOptions(), {
+    streamRequest(value) {
+      request = value;
+    },
+  });
+
+  plugin.translate({
+    text: "source",
+    from: "en",
+    to: "zh-Hans",
+    cancelSignal,
+    onStream: (result) => streamResults.push(result.toParagraphs[0]),
+    onCompletion: (result) => completionResults.push(result),
+  });
+
+  request.streamHandler({ text: 'data: {"choices":[{"delta":{"content":"first"},"finish_reason":null}]}\n\n' });
+  cancelSignal.send();
+  request.streamHandler({ text: 'data: {"choices":[{"delta":{"content":" late"},"finish_reason":"stop"}]}\n\n' });
+  request.handler({ response: { statusCode: 200 } });
+
+  assert.deepEqual(streamResults, ["first"]);
+  assert.deepEqual(completionResults, []);
+  assert.equal(cancelSignal.disposeCount, 1);
 });
 
 test("Qwen MT Plus is non-streaming and sends English language names, not Bob codes", () => {

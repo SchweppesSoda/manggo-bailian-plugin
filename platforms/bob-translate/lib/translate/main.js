@@ -101,15 +101,60 @@ function resultPayload(text, resolvedLanguages) {
   };
 }
 
-function completeOnce(query, legacyCompletion) {
+function createCancellation(query) {
+  var cancelled = false;
+  var subscription = null;
+  var callbacks = [];
+
+  function dispose() {
+    if (!subscription) return;
+    var current = subscription;
+    subscription = null;
+    if (typeof current.dispose === "function") current.dispose();
+  }
+
+  function cancel() {
+    if (cancelled) return;
+    cancelled = true;
+    var pending = callbacks;
+    callbacks = [];
+    for (var index = 0; index < pending.length; index += 1) pending[index]();
+    dispose();
+  }
+
+  var signal = query && query.cancelSignal;
+  if (signal && typeof signal.subscribe === "function") {
+    try {
+      subscription = signal.subscribe(cancel);
+      // Also dispose when a test double or future host invokes synchronously.
+      if (cancelled) dispose();
+    } catch (_) {
+      subscription = null;
+    }
+  }
+
+  return {
+    dispose: dispose,
+    isCancelled: function () { return cancelled; },
+    onCancel: function (callback) {
+      if (cancelled) callback();
+      else callbacks.push(callback);
+    }
+  };
+}
+
+function completeOnce(query, legacyCompletion, cancellation) {
   var completed = false;
   var invoke = function (payload) {
-    if (completed) return;
+    if (completed || (cancellation && cancellation.isCancelled())) return;
     completed = true;
+    if (cancellation) cancellation.dispose();
     if (query && typeof query.onCompletion === "function") query.onCompletion(payload);
     else if (typeof legacyCompletion === "function") legacyCompletion(payload);
   };
-  invoke.isCompleted = function () { return completed; };
+  invoke.isCompleted = function () {
+    return completed || Boolean(cancellation && cancellation.isCancelled());
+  };
   return invoke;
 }
 
@@ -150,6 +195,7 @@ function parseJsonCompletion(payload, core) {
 function translateNonstream(query, complete, runtime, core, endpoint, request, config, resolvedLanguages) {
   try {
     transport.postJson(runtime.http, endpoint, request, config, query && query.cancelSignal, function (response) {
+      if (complete.isCompleted()) return;
       if (response && response.error) {
         completeError(complete, transport.networkFailure(response.error, config.apiKey));
         return;
@@ -171,15 +217,30 @@ function translateNonstream(query, complete, runtime, core, endpoint, request, c
   }
 }
 
-function translateStream(query, complete, runtime, core, endpoint, request, config, resolvedLanguages) {
-  var streamRaw = "";
+function translateStream(query, complete, cancellation, runtime, core, endpoint, request, config, resolvedLanguages) {
+  var ERROR_PREVIEW_LIMIT = 16384;
+  var errorPreview = "";
   var streamParseError = null;
-  var accumulator = sse.createSseAccumulator(function (allText) {
+  var makeBatcher = core && typeof core.createStreamBatcher === "function"
+    ? core.createStreamBatcher
+    : sse.createStreamBatcher;
+  var batcher = makeBatcher(function (allText) {
     if (query && typeof query.onStream === "function") {
       // Bob expects every streamed result to be the cumulative translation.
       query.onStream(resultPayload(allText, resolvedLanguages));
     }
+  }, { mode: "snapshot" });
+  var accumulator = sse.createSseAccumulator(function (addition) {
+    batcher.push(addition);
   });
+  cancellation.onCancel(function () {
+    batcher.cancel();
+  });
+
+  function appendErrorPreview(chunk) {
+    if (!chunk || errorPreview.length >= ERROR_PREVIEW_LIMIT) return;
+    errorPreview += chunk.slice(0, ERROR_PREVIEW_LIMIT - errorPreview.length);
+  }
 
   try {
     transport.streamJson(
@@ -192,7 +253,7 @@ function translateStream(query, complete, runtime, core, endpoint, request, conf
       if (complete.isCompleted()) return;
       try {
         var chunk = stream && stream.text ? String(stream.text) : "";
-        streamRaw += chunk;
+        appendErrorPreview(chunk);
         accumulator.push(chunk);
       } catch (error) {
         // Wait for handler: a non-2xx response can contain non-SSE JSON text.
@@ -202,23 +263,27 @@ function translateStream(query, complete, runtime, core, endpoint, request, conf
     function (response) {
       if (complete.isCompleted()) return;
       if (response && response.error) {
+        batcher.cancel();
         completeError(complete, transport.networkFailure(response.error, config.apiKey));
         return;
       }
       var status = transport.responseStatus(response);
       if (status >= 300) {
-        completeError(complete, transport.httpFailure(status, streamRaw || transport.rawResponseData(response), config.apiKey));
+        batcher.cancel();
+        completeError(complete, transport.httpFailure(status, errorPreview || transport.rawResponseData(response), config.apiKey));
         return;
       }
       try {
         if (streamParseError) throw streamParseError;
         var state = accumulator.finish();
+        var result = batcher.finish();
         if (state.truncated) {
           throw new Error("Model Studio output was truncated; increase Max tokens or reduce the input.");
         }
-        if (!state.result.trim()) throw new Error("Model Studio stream did not include result text.");
-        complete({ result: resultPayload(state.result, resolvedLanguages) });
+        if (!result.trim()) throw new Error("Model Studio stream did not include result text.");
+        complete({ result: resultPayload(result, resolvedLanguages) });
       } catch (error) {
+        batcher.cancel();
         completeError(complete, transport.apiFailure(error, config.apiKey));
       }
     }
@@ -233,7 +298,8 @@ function translate(query, legacyCompletion, suppliedRuntime) {
     option: typeof $option === "undefined" ? {} : $option,
     http: typeof $http === "undefined" ? null : $http
   };
-  var complete = completeOnce(query, legacyCompletion);
+  var cancellation = createCancellation(query);
+  var complete = completeOnce(query, legacyCompletion, cancellation);
   var config;
   var resolvedLanguages;
   var core = runtimeCore(runtime);
@@ -260,7 +326,7 @@ function translate(query, legacyCompletion, suppliedRuntime) {
   if (request.stream === false) {
     translateNonstream(query, complete, runtime, core, endpoint, request, config, resolvedLanguages);
   } else {
-    translateStream(query, complete, runtime, core, endpoint, request, config, resolvedLanguages);
+    translateStream(query, complete, cancellation, runtime, core, endpoint, request, config, resolvedLanguages);
   }
 }
 
@@ -276,7 +342,7 @@ function pluginValidate(completion, suppliedRuntime) {
     }
     // Validate billing/endpoint and thinking compatibility without consuming API quota.
     var core = runtimeCore(runtime);
-    if (core && typeof core.validateConfig === "function") core.validateConfig(config);
+    if (core && typeof core.validateConfig === "function") core.validateConfig(config, "translation");
     else {
       options.chatEndpoint(config);
       options.thinkingFields(config);

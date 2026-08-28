@@ -1,4 +1,5 @@
 import { DEFAULTS, boundedInteger, chatEndpoint, nonEmptyText, normalizedBoolean } from "./config.js";
+import { SERVICE_KIND, supportsMaxPixels, validateModelForService } from "./catalog.js";
 import { languageName } from "./languages.js";
 import { thinkingFields } from "./models.js";
 
@@ -16,6 +17,12 @@ export const OCR_INSTRUCTION = [
 
 export const MAX_IMAGE_DATA_URL_CHARS = 20 * 1024 * 1024;
 
+export const OCR_RESOLUTION_PRESETS = Object.freeze({
+  auto: undefined,
+  fast: 1048576,
+  high: 8388608,
+});
+
 export function requestBase(config = {}, maxTokens) {
   const model = nonEmptyText(config.model, DEFAULTS.model);
   return {
@@ -29,6 +36,7 @@ export function requestBase(config = {}, maxTokens) {
 }
 
 export function translationRequest(text, from, to, config = {}, detected) {
+  validateModelForService(config, SERVICE_KIND.TRANSLATION);
   const request = requestBase(config, 4096);
   const source = languageName(from, detected);
   const target = languageDisplayTarget(to);
@@ -67,22 +75,39 @@ function languageDisplayTarget(input) {
 }
 
 export function imageUrl(input) {
-  const raw = nonEmptyText(input);
-  if (!raw) throw new Error("Image content is required.");
-  const url = /^data:image\//i.test(raw)
-    ? raw
-    : `data:image/png;base64,${raw.replace(/\s+/g, "")}`;
+  if (input === undefined || input === null) throw new Error("Image content is required.");
+  let raw = String(input);
+  if (!raw.trim()) throw new Error("Image content is required.");
+  if (/^\s|\s$/.test(raw)) raw = raw.trim();
+  const isDataUrl = /^data:image\//i.test(raw);
+  const estimatedLength = isDataUrl ? raw.length : "data:image/png;base64,".length + raw.length;
+  if (estimatedLength > MAX_IMAGE_DATA_URL_CHARS) {
+    throw new Error("Image data exceeds the 20 MB Data URL limit.");
+  }
+  if (/\s/.test(raw)) raw = raw.replace(/\s+/g, "");
+  const url = isDataUrl ? raw : `data:image/png;base64,${raw}`;
   if (url.length > MAX_IMAGE_DATA_URL_CHARS) throw new Error("Image data exceeds the 20 MB Data URL limit.");
   return url;
 }
 
 export function ocrRequest(base64, language, config = {}) {
+  validateModelForService(config, SERVICE_KIND.OCR);
   const request = requestBase(config, 8192);
   const expectedLanguage = languageName(language);
+  const resolution = nonEmptyText(config.ocrResolution, "auto").toLowerCase();
+  if (!Object.prototype.hasOwnProperty.call(OCR_RESOLUTION_PRESETS, resolution)) {
+    throw new Error(`Unsupported OCR resolution: ${config.ocrResolution}.`);
+  }
+  const maxPixels = OCR_RESOLUTION_PRESETS[resolution];
+  if (maxPixels && !supportsMaxPixels(request.model)) {
+    throw new Error(`Model ${request.model} does not support the plugin's OCR resolution setting.`);
+  }
+  const imageContent = { type: "image_url", image_url: { url: imageUrl(base64) } };
+  if (maxPixels) imageContent.max_pixels = maxPixels;
   const userMessage = {
     role: "user",
     content: [
-      { type: "image_url", image_url: { url: imageUrl(base64) } },
+      imageContent,
       {
         type: "text",
         text: [
@@ -122,7 +147,8 @@ export function createOcrCall(base64, language, config = {}) {
  * Validate the shared routing and model rules without sending a request.
  * The platform adapter remains responsible for checking its own credentials.
  */
-export function validateConfig(config = {}) {
+export function validateConfig(config = {}, service) {
+  validateModelForService(config, service);
   const request = requestBase(config, 4096);
   return { endpoint: chatEndpoint(config), model: request.model };
 }

@@ -45,6 +45,70 @@ test("pure Core rejects malformed custom endpoints without browser URL APIs", ()
   assert.throws(() => secureBaseUrl("https://example.test/v1?key=value"), /query or fragment/);
 });
 
+test("Coding Plan uses an exact model catalog and official endpoint", () => {
+  assert.deepEqual(validateConfig({ accessMode: "coding_plan", model: "qwen3.7-plus", region: "china" }, "translation"), {
+    endpoint: "https://coding.dashscope.aliyuncs.com/v1/chat/completions",
+    model: "qwen3.7-plus",
+  });
+  assert.throws(
+    () => createTranslationCall("hello", "en", "zh-Hans", {
+      accessMode: "coding_plan",
+      region: "china",
+      model: "qwen3.7-flash",
+    }),
+    /verified Coding Plan model list/,
+  );
+  assert.throws(
+    () => validateConfig({
+      accessMode: "coding_plan",
+      region: "china",
+      model: "qwen3.7-plus",
+      customBaseUrl: "https://example.test/v1",
+    }, "translation"),
+    /official Base URL/,
+  );
+});
+
+test("Token Plan validates its current official model list before transport", () => {
+  assert.deepEqual(validateConfig({ accessMode: "token_plan", model: "qwen3.8-flash", region: "china" }, "translation"), {
+    endpoint: "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+    model: "qwen3.8-flash",
+  });
+  assert.throws(
+    () => validateConfig({ accessMode: "token_plan", model: "qwen-mt-plus", region: "china" }, "translation"),
+    /verified Token Plan model list/,
+  );
+  assert.throws(
+    () => validateConfig({ accessMode: "token_plan", model: "qwen3.7-max", region: "china" }, "ocr"),
+    /does not support image input/,
+  );
+});
+
+test("OCR rejects text-only Coding Plan models and applies supported resolution presets", () => {
+  assert.throws(
+    () => createOcrCall("data:image/png;base64,YWJj", "en", {
+      accessMode: "coding_plan",
+      region: "china",
+      model: "glm-5",
+    }),
+    /does not support image input/,
+  );
+  const fast = createOcrCall("data:image/png;base64,YWJj", "en", {
+    accessMode: "coding_plan",
+    region: "china",
+    model: "qwen3.7-plus",
+    ocrResolution: "fast",
+  });
+  assert.equal(fast.body.messages[1].content[0].max_pixels, 1048576);
+  const automatic = createOcrCall("data:image/png;base64,YWJj", "en", {
+    accessMode: "coding_plan",
+    region: "china",
+    model: "qwen3.7-plus",
+    ocrResolution: "auto",
+  });
+  assert.equal("max_pixels" in automatic.body.messages[1].content[0], false);
+});
+
 test("pure Core parses JSON and SSE content while leaving callback effects to adapters", () => {
   assert.equal(parseJsonCompletion({
     choices: [{ message: { content: [{ text: "Hello" }, " world"] }, finish_reason: "stop" }],

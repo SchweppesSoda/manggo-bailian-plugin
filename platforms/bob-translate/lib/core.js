@@ -38,9 +38,13 @@ __export(index_exports, {
   DEFAULTS: () => DEFAULTS,
   LANGUAGE_MAPPINGS: () => LANGUAGE_MAPPINGS,
   MAX_IMAGE_DATA_URL_CHARS: () => MAX_IMAGE_DATA_URL_CHARS,
+  MODEL_CATALOG: () => MODEL_CATALOG,
   OCR_INSTRUCTION: () => OCR_INSTRUCTION,
+  OCR_RESOLUTION_PRESETS: () => OCR_RESOLUTION_PRESETS,
   PLAN_ENDPOINTS: () => PLAN_ENDPOINTS,
+  SERVICE_KIND: () => SERVICE_KIND,
   SHARED_PAYG_ENDPOINTS: () => SHARED_PAYG_ENDPOINTS,
+  STREAM_BATCH_DEFAULTS: () => STREAM_BATCH_DEFAULTS,
   TRANSLATION_INSTRUCTION: () => TRANSLATION_INSTRUCTION,
   applySseEvent: () => applySseEvent,
   automaticBaseUrl: () => automaticBaseUrl,
@@ -50,6 +54,7 @@ __export(index_exports, {
   contentText: () => contentText,
   createOcrCall: () => createOcrCall,
   createSseState: () => createSseState,
+  createStreamBatcher: () => createStreamBatcher,
   createTranslationCall: () => createTranslationCall,
   effortLevel: () => effortLevel,
   eventData: () => eventData,
@@ -58,6 +63,7 @@ __export(index_exports, {
   languageDisplayName: () => languageDisplayName,
   languageName: () => languageName,
   maximumThinkingTokens: () => maximumThinkingTokens,
+  modelCapability: () => modelCapability,
   nonEmptyText: () => nonEmptyText,
   normalizedBoolean: () => normalizedBoolean,
   ocrRequest: () => ocrRequest,
@@ -68,10 +74,12 @@ __export(index_exports, {
   secureBaseUrl: () => secureBaseUrl,
   selectedValue: () => selectedValue,
   serviceErrorDetail: () => serviceErrorDetail,
+  supportsMaxPixels: () => supportsMaxPixels,
   thinkingFamily: () => thinkingFamily,
   thinkingFields: () => thinkingFields,
   translationRequest: () => translationRequest,
-  validateConfig: () => validateConfig
+  validateConfig: () => validateConfig,
+  validateModelForService: () => validateModelForService
 });
 module.exports = __toCommonJS(index_exports);
 
@@ -86,6 +94,7 @@ var DEFAULTS = Object.freeze({
   region: "china",
   model: "qwen3.7-plus"
 });
+var RUNTIME_PROFILE = "__BAILIAN_RUNTIME_PROFILE_DEVELOPMENT__";
 var VALID_ACCESS_MODES = Object.freeze({
   pay_as_you_go: true,
   coding_plan: true,
@@ -158,9 +167,17 @@ function secureBaseUrl(input) {
   return raw.replace(/\/+$/, "");
 }
 function automaticBaseUrl(config = {}) {
-  const custom = nonEmptyText(config.customBaseUrl);
-  if (custom) return secureBaseUrl(custom);
   const mode = selectedValue(config.accessMode, DEFAULTS.accessMode, VALID_ACCESS_MODES, "billing mode");
+  if (mode === ACCESS_MODE.CODING && RUNTIME_PROFILE === "__BAILIAN_RUNTIME_PROFILE_PUBLIC__") {
+    throw new Error("Coding Plan is disabled in public plugin packages; use pay-as-you-go or Token Plan.");
+  }
+  const custom = nonEmptyText(config.customBaseUrl);
+  if (custom) {
+    if (mode === ACCESS_MODE.CODING || mode === ACCESS_MODE.TOKEN) {
+      throw new Error("Coding Plan and Token Plan must use their official Base URLs; remove the Custom Base URL.");
+    }
+    return secureBaseUrl(custom);
+  }
   const region = selectedValue(config.region, DEFAULTS.region, VALID_REGIONS, "region");
   if (mode === ACCESS_MODE.CODING || mode === ACCESS_MODE.TOKEN) {
     if (region !== "china") {
@@ -179,6 +196,60 @@ function automaticBaseUrl(config = {}) {
 function chatEndpoint(config = {}) {
   const base = automaticBaseUrl(config);
   return /\/chat\/completions$/i.test(base) ? base : `${base}/chat/completions`;
+}
+
+// src/core/catalog.js
+var SERVICE_KIND = Object.freeze({
+  TRANSLATION: "translation",
+  OCR: "ocr"
+});
+var MODEL_CATALOG = Object.freeze({
+  "qwen3.7-plus": { coding: true, token: true, vision: true, thinking: "budget", maxThinkingTokens: 262144, maxPixels: true },
+  "qwen3.6-plus": { coding: true, vision: true, thinking: "budget", maxThinkingTokens: 81920, maxPixels: true },
+  "qwen3.5-plus": { coding: true, vision: true, thinking: "budget", maxThinkingTokens: 81920, maxPixels: true },
+  "kimi-k2.5": { coding: true, vision: true, thinking: "budget", maxThinkingTokens: 81920, maxPixels: false },
+  "glm-5": { coding: true, vision: false, thinking: "budget", maxThinkingTokens: 32768, maxPixels: false },
+  "minimax-m2.5": { coding: true, vision: false, thinking: "always", maxPixels: false },
+  "qwen3-max-2026-01-23": { coding: true, vision: false, thinking: "budget", maxThinkingTokens: 81920, maxPixels: false },
+  "qwen3-coder-next": { coding: true, vision: false, thinking: "unsupported", maxPixels: false },
+  "qwen3-coder-plus": { coding: true, vision: false, thinking: "unsupported", maxPixels: false },
+  "glm-4.7": { coding: true, vision: false, thinking: "budget", maxThinkingTokens: 32768, maxPixels: false },
+  "qwen3.8-max": { coding: false, token: true, vision: true, thinking: "qwen38", maxPixels: true },
+  "qwen3.8-max-preview": { coding: false, token: true, vision: true, thinking: "qwen38", maxPixels: true },
+  "qwen3.8-flash": { coding: false, token: true, vision: true, thinking: "qwen38", maxPixels: true },
+  "qwen3.7-max": { coding: false, token: true, vision: false, thinking: "budget", maxThinkingTokens: 262144, maxPixels: false },
+  "qwen3.7-flash": { coding: false, vision: true, thinking: "budget", maxThinkingTokens: 262144, maxPixels: true },
+  "qwen3.6-flash": { coding: false, token: true, vision: true, thinking: "budget", maxThinkingTokens: 81920, maxPixels: true },
+  "qwen3.5-ocr": { coding: false, vision: true, thinking: "unsupported", maxPixels: true, ocrOnly: true },
+  "qwen-mt-plus": { coding: false, vision: false, thinking: "unsupported", maxPixels: false, translationOnly: true },
+  "qwen-mt-turbo": { coding: false, vision: false, thinking: "unsupported", maxPixels: false, translationOnly: true },
+  "qwen-mt-flash": { coding: false, vision: false, thinking: "unsupported", maxPixels: false, translationOnly: true },
+  "qwen-mt-lite": { coding: false, vision: false, thinking: "unsupported", maxPixels: false, translationOnly: true }
+});
+function modelCapability(model) {
+  return MODEL_CATALOG[nonEmptyText(model).toLowerCase()];
+}
+function validateModelForService(config = {}, service) {
+  const model = nonEmptyText(config.model, DEFAULTS.model);
+  const mode = nonEmptyText(config.accessMode, DEFAULTS.accessMode).toLowerCase();
+  const capability = modelCapability(model);
+  if (mode === ACCESS_MODE.CODING && (!capability || !capability.coding)) {
+    throw new Error(`Model ${model} is not in the plugin's verified Coding Plan model list.`);
+  }
+  if (mode === ACCESS_MODE.TOKEN && (!capability || !capability.token)) {
+    throw new Error(`Model ${model} is not in the plugin's verified Token Plan model list.`);
+  }
+  if (service === SERVICE_KIND.OCR && capability && !capability.vision) {
+    throw new Error(`Model ${model} does not support image input and cannot be used for OCR.`);
+  }
+  if (service === SERVICE_KIND.TRANSLATION && capability && capability.ocrOnly) {
+    throw new Error(`Model ${model} is an OCR-only model and cannot be used for translation.`);
+  }
+  return capability;
+}
+function supportsMaxPixels(model) {
+  const capability = modelCapability(model);
+  return Boolean(capability && capability.maxPixels);
 }
 
 // src/core/languages.js
@@ -265,18 +336,12 @@ var LANGUAGE_MAPPINGS = Object.freeze(LANGUAGE_ENTRIES.map((entry) => Object.fre
 var VALID_EFFORTS = Object.freeze({ auto: true, low: true, medium: true, high: true });
 function thinkingFamily(model) {
   const id = nonEmptyText(model).toLowerCase();
-  if (id === "qwen3.8-max" || id === "qwen3.8-max-preview") return "qwen38";
-  if (id === "minimax-m2.5") return "always";
-  if (id === "qwen3-coder-next" || id === "qwen3-coder-plus" || id.indexOf("qwen-mt-") === 0 || id === "qwen3.5-ocr") return "unsupported";
-  if (/^qwen3\.(5|6|7)-/.test(id) || /^qwen3-max-/.test(id) || id === "kimi-k2.5" || /^glm-(4\.7|5)$/.test(id)) return "budget";
-  return "unknown";
+  const capability = modelCapability(id);
+  return capability ? capability.thinking : "unknown";
 }
 function maximumThinkingTokens(model) {
-  const id = nonEmptyText(model).toLowerCase();
-  if (/^qwen3\.7-/.test(id)) return 262144;
-  if (/^qwen3\.(5|6)-/.test(id) || /^qwen3-max-/.test(id) || id === "kimi-k2.5") return 81920;
-  if (/^glm-(4\.7|5)$/.test(id)) return 32768;
-  return void 0;
+  const capability = modelCapability(model);
+  return capability && capability.maxThinkingTokens;
 }
 function effortLevel(input) {
   return selectedValue(input, "auto", VALID_EFFORTS, "Reasoning effort");
@@ -325,6 +390,11 @@ var OCR_INSTRUCTION = [
   "Preserve reading order, paragraphs, lists, and line breaks. Return only the recognized text."
 ].join(" ");
 var MAX_IMAGE_DATA_URL_CHARS = 20 * 1024 * 1024;
+var OCR_RESOLUTION_PRESETS = Object.freeze({
+  auto: void 0,
+  fast: 1048576,
+  high: 8388608
+});
 function requestBase(config = {}, maxTokens) {
   const model = nonEmptyText(config.model, DEFAULTS.model);
   return __spreadValues({
@@ -336,6 +406,7 @@ function requestBase(config = {}, maxTokens) {
   }, thinkingFields(model, normalizedBoolean(config.enableThinking, false), config.reasoningEffort));
 }
 function translationRequest(text, from, to, config = {}, detected) {
+  validateModelForService(config, SERVICE_KIND.TRANSLATION);
   const request = requestBase(config, 4096);
   const source = languageName(from, detected);
   const target = languageDisplayTarget(to);
@@ -370,19 +441,38 @@ function languageDisplayTarget(input) {
   return name === "Auto detect" ? "English" : name;
 }
 function imageUrl(input) {
-  const raw = nonEmptyText(input);
-  if (!raw) throw new Error("Image content is required.");
-  const url = /^data:image\//i.test(raw) ? raw : `data:image/png;base64,${raw.replace(/\s+/g, "")}`;
+  if (input === void 0 || input === null) throw new Error("Image content is required.");
+  let raw = String(input);
+  if (!raw.trim()) throw new Error("Image content is required.");
+  if (/^\s|\s$/.test(raw)) raw = raw.trim();
+  const isDataUrl = /^data:image\//i.test(raw);
+  const estimatedLength = isDataUrl ? raw.length : "data:image/png;base64,".length + raw.length;
+  if (estimatedLength > MAX_IMAGE_DATA_URL_CHARS) {
+    throw new Error("Image data exceeds the 20 MB Data URL limit.");
+  }
+  if (/\s/.test(raw)) raw = raw.replace(/\s+/g, "");
+  const url = isDataUrl ? raw : `data:image/png;base64,${raw}`;
   if (url.length > MAX_IMAGE_DATA_URL_CHARS) throw new Error("Image data exceeds the 20 MB Data URL limit.");
   return url;
 }
 function ocrRequest(base64, language, config = {}) {
+  validateModelForService(config, SERVICE_KIND.OCR);
   const request = requestBase(config, 8192);
   const expectedLanguage = languageName(language);
+  const resolution = nonEmptyText(config.ocrResolution, "auto").toLowerCase();
+  if (!Object.prototype.hasOwnProperty.call(OCR_RESOLUTION_PRESETS, resolution)) {
+    throw new Error(`Unsupported OCR resolution: ${config.ocrResolution}.`);
+  }
+  const maxPixels = OCR_RESOLUTION_PRESETS[resolution];
+  if (maxPixels && !supportsMaxPixels(request.model)) {
+    throw new Error(`Model ${request.model} does not support the plugin's OCR resolution setting.`);
+  }
+  const imageContent = { type: "image_url", image_url: { url: imageUrl(base64) } };
+  if (maxPixels) imageContent.max_pixels = maxPixels;
   const userMessage = {
     role: "user",
     content: [
-      { type: "image_url", image_url: { url: imageUrl(base64) } },
+      imageContent,
       {
         type: "text",
         text: [
@@ -411,7 +501,8 @@ function createOcrCall(base64, language, config = {}) {
     body: ocrRequest(base64, language, config)
   };
 }
-function validateConfig(config = {}) {
+function validateConfig(config = {}, service) {
+  validateModelForService(config, service);
   const request = requestBase(config, 4096);
   return { endpoint: chatEndpoint(config), model: request.model };
 }
@@ -514,3 +605,72 @@ function applySseEvent(block, state = createSseState()) {
     }
   };
 }
+
+// src/core/streaming.js
+var DEFAULT_MIN_INTERVAL_MS = 60;
+var DEFAULT_MAX_PENDING_CHARS = 96;
+function positiveInteger(input, fallback) {
+  const value = Number(input);
+  return Number.isFinite(value) && value > 0 ? Math.trunc(value) : fallback;
+}
+function createStreamBatcher(emit, options = {}) {
+  const mode = options.mode === "snapshot" ? "snapshot" : "delta";
+  const minIntervalMs = positiveInteger(options.minIntervalMs, DEFAULT_MIN_INTERVAL_MS);
+  const maxPendingChars = positiveInteger(options.maxPendingChars, DEFAULT_MAX_PENDING_CHARS);
+  const now = typeof options.now === "function" ? options.now : Date.now;
+  const resultParts = [];
+  let pendingParts = [];
+  let pendingChars = 0;
+  let emitted = false;
+  let stopped = false;
+  let lastFlushAt = 0;
+  function snapshot() {
+    return resultParts.join("");
+  }
+  function flush(at = now()) {
+    if (stopped || pendingChars === 0) return "";
+    const output = mode === "snapshot" ? snapshot() : pendingParts.join("");
+    pendingParts = [];
+    pendingChars = 0;
+    emitted = true;
+    lastFlushAt = at;
+    if (typeof emit === "function") emit(output);
+    return output;
+  }
+  function push(input, at = now()) {
+    if (stopped || input === void 0 || input === null) return false;
+    const addition = String(input);
+    if (!addition) return false;
+    resultParts.push(addition);
+    pendingParts.push(addition);
+    pendingChars += addition.length;
+    const elapsed = emitted ? at - lastFlushAt : Number.POSITIVE_INFINITY;
+    const boundary = pendingChars >= 32 && /[\n\r。！？.!?]\s*$/.test(addition);
+    if (!emitted || pendingChars >= maxPendingChars || elapsed >= minIntervalMs || boundary) {
+      flush(at);
+      return true;
+    }
+    return false;
+  }
+  function finish(at = now()) {
+    if (!stopped) flush(at);
+    stopped = true;
+    return snapshot();
+  }
+  function cancel() {
+    stopped = true;
+    pendingParts = [];
+    pendingChars = 0;
+  }
+  return {
+    cancel,
+    finish,
+    flush,
+    push,
+    snapshot
+  };
+}
+var STREAM_BATCH_DEFAULTS = Object.freeze({
+  minIntervalMs: DEFAULT_MIN_INTERVAL_MS,
+  maxPendingChars: DEFAULT_MAX_PENDING_CHARS
+});

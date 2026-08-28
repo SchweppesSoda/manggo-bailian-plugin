@@ -1,9 +1,9 @@
 {
   "identifier": "com.schweppessoda.bailian.translate",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "category": "translate",
   "name": "百炼翻译",
-  "summary": "通过阿里云百炼 Model Studio 翻译文本。支持按量付费、Coding Plan 和 Token Plan。",
+  "summary": "通过阿里云百炼 Model Studio 翻译文本。支持按量付费和 Token Plan。",
   "author": "SchweppesSoda",
   "homepage": "https://github.com/SchweppesSoda/bob-bailian-translate",
   "appcast": "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-translate/main/appcast.json",
@@ -30,15 +30,11 @@
           "value": "pay_as_you_go"
         },
         {
-          "title": "Coding Plan",
-          "value": "coding_plan"
-        },
-        {
           "title": "Token Plan",
           "value": "token_plan"
         }
       ],
-      "desc": "Select the plan that issued this API Key. Coding Plan and Token Plan require Alibaba Cloud eligibility and compliant interactive use."
+      "desc": "Select the mode that issued this API Key. The public package does not expose Coding Plan because Alibaba Cloud prohibits it in custom applications."
     },
     {
       "identifier": "region",
@@ -75,7 +71,7 @@
         "type": "visible",
         "placeholderText": "https://example.com/v1"
       },
-      "desc": "Must use HTTPS. Your API Key will be sent to this URL; use only an endpoint you trust."
+      "desc": "Advanced pay-as-you-go override. Token Plan uses its official Base URL. HTTPS only."
     },
     {
       "identifier": "modelPreset",
@@ -84,32 +80,32 @@
       "defaultValue": "qwen3.7-plus",
       "menuValues": [
         {
-          "title": "Qwen3.7 Plus (recommended)",
+          "title": "Qwen3.7 Plus (pay-as-you-go / Token Plan)",
           "value": "qwen3.7-plus"
         },
         {
-          "title": "Qwen MT Plus (translation specialist)",
-          "value": "qwen-mt-plus"
-        },
-        {
-          "title": "Qwen3.8 Max",
+          "title": "Qwen3.8 Max (pay-as-you-go / Token Plan)",
           "value": "qwen3.8-max"
         },
         {
-          "title": "Qwen3 Coder Plus",
-          "value": "qwen3-coder-plus"
+          "title": "Qwen3.8 Flash (pay-as-you-go / Token Plan)",
+          "value": "qwen3.8-flash"
         },
         {
-          "title": "MiniMax M2.5",
-          "value": "MiniMax-M2.5"
+          "title": "Qwen3.7 Max (pay-as-you-go / Token Plan)",
+          "value": "qwen3.7-max"
         },
         {
-          "title": "Kimi K2.5",
-          "value": "kimi-k2.5"
+          "title": "Qwen3.6 Flash (pay-as-you-go / Token Plan)",
+          "value": "qwen3.6-flash"
         },
         {
-          "title": "GLM-4.7",
-          "value": "glm-4.7"
+          "title": "Qwen MT Plus (pay-as-you-go only)",
+          "value": "qwen-mt-plus"
+        },
+        {
+          "title": "Qwen3.7 Flash (pay-as-you-go only)",
+          "value": "qwen3.7-flash"
         }
       ],
       "desc": "Use Custom model below to override this selection."

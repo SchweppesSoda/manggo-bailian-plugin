@@ -21,6 +21,8 @@ var DEFAULTS = {
   maxTokens: 4096
 };
 
+var RUNTIME_PROFILE = "__BAILIAN_RUNTIME_PROFILE_DEVELOPMENT__";
+
 var PAYG_ENDPOINTS = {
   china: "https://dashscope.aliyuncs.com/compatible-mode/v1",
   singapore: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
@@ -113,11 +115,19 @@ function normalizeConfig(options) {
 }
 
 function automaticBaseUrl(config) {
-  if (config.customBaseUrl) return secureBaseUrl(config.customBaseUrl);
+  if (config.accessMode === ACCESS_MODE.CODING && RUNTIME_PROFILE === "__BAILIAN_RUNTIME_PROFILE_PUBLIC__") {
+    throw new Error("Coding Plan is disabled in public plugin packages; use pay-as-you-go or Token Plan.");
+  }
+  if (config.customBaseUrl) {
+    if (config.accessMode === ACCESS_MODE.CODING || config.accessMode === ACCESS_MODE.TOKEN) {
+      throw new Error("Coding Plan and Token Plan must use their official Base URLs; remove the Custom Base URL.");
+    }
+    return secureBaseUrl(config.customBaseUrl);
+  }
 
   if (config.accessMode === ACCESS_MODE.CODING || config.accessMode === ACCESS_MODE.TOKEN) {
     if (config.region !== "china") {
-      throw new Error("Coding Plan and Token Plan currently require the China (Beijing) region unless you set a Custom Base URL.");
+      throw new Error("Coding Plan and Token Plan currently require the China (Beijing) region.");
     }
     return PLAN_ENDPOINTS[config.accessMode];
   }

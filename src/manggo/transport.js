@@ -1,10 +1,10 @@
 import {
-  applySseEvent,
   chatEndpoint,
-  createSseState,
+  createStreamBatcher,
   formatHttpError,
   nonEmptyText,
   parseJsonCompletion,
+  parseSseEvent,
 } from "../core/index.js";
 
 function configFrom(options) {
@@ -68,17 +68,18 @@ export async function streamCompletion(response, options, allowEmpty) {
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let state = createSseState();
   let pending = "";
+  let truncated = false;
+  const batcher = createStreamBatcher((addition) => emitChunk(options, addition), { mode: "delta" });
 
   const drain = (flush) => {
     pending = pending.replace(/\r\n/g, "\n");
     const blocks = pending.split("\n\n");
     pending = flush ? "" : (blocks.pop() || "");
     for (let index = 0; index < blocks.length; index += 1) {
-      const applied = applySseEvent(blocks[index], state);
-      state = applied.state;
-      if (applied.addition) emitChunk(options, applied.addition);
+      const event = parseSseEvent(blocks[index]);
+      truncated = Boolean(truncated || event.truncated);
+      if (event.addition) batcher.push(event.addition);
     }
   };
 
@@ -94,9 +95,10 @@ export async function streamCompletion(response, options, allowEmpty) {
     drain(true);
   }
 
-  if (state.truncated) throw new Error("Model Studio output was truncated; increase Max tokens or reduce the input.");
-  if (!allowEmpty && !state.result.trim()) throw new Error("Model Studio stream did not include result text.");
-  return state.result;
+  const result = batcher.finish();
+  if (truncated) throw new Error("Model Studio output was truncated; increase Max tokens or reduce the input.");
+  if (!allowEmpty && !result.trim()) throw new Error("Model Studio stream did not include result text.");
+  return result;
 }
 
 export async function complete(request, options, allowEmpty) {

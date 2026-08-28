@@ -28,6 +28,21 @@ test("Bob OCR builds a MIME-aware data URL and rejects unknown input", () => {
   assert.throws(() => imageTools.imageDataUrl(bobData([1, 2, 3, 4])), /Unsupported image format/);
 });
 
+test("Bob OCR rejects oversized image data before Base64 allocation", () => {
+  let encoded = false;
+  const pngPrefix = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  const oversized = {
+    length: 16 * 1024 * 1024,
+    readUInt8(index) { return pngPrefix[index] ?? 0; },
+    toBase64() {
+      encoded = true;
+      return "unused";
+    },
+  };
+  assert.throws(() => imageTools.imageDataUrl(oversized), /20 MB Data URL limit/);
+  assert.equal(encoded, false);
+});
+
 test("Bob OCR converts model text into ordered non-empty rows", () => {
   assert.deepEqual(imageTools.textRows("第一行\r\n\r\n 第二行 "), [
     { text: "第一行" },

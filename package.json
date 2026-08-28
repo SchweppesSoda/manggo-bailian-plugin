@@ -1,12 +1,13 @@
 {
   "name": "manggo-bailian-plugin",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test",
-    "package": "npm run build && pwsh -NoProfile -File scripts/package.ps1"
+    "package": "npm run build && pwsh -NoProfile -File scripts/package.ps1",
+    "package:personal": "npm run build && pwsh -NoProfile -File scripts/package.ps1 -Profile PersonalCoding"
   },
   "devDependencies": {
     "esbuild": "^0.25.10"

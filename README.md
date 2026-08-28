@@ -6,9 +6,9 @@
 
 | 平台 | 安装包 | 能力 |
 |---|---|---|
-| Manggo | `manggo-bailian-2.1.0.mplugin` | 翻译 + OCR |
-| Bob 1.8+ | `bob-bailian-translate-2.1.0.bobplugin` | 流式文本翻译 |
-| Bob 1.8+ | `bob-bailian-ocr-2.1.0.bobplugin` | 图片 OCR |
+| Manggo | `manggo-bailian-2.2.0.mplugin` | 翻译 + OCR |
+| Bob 1.8+ | `bob-bailian-translate-2.2.0.bobplugin` | 流式文本翻译 |
+| Bob 1.8+ | `bob-bailian-ocr-2.2.0.bobplugin` | 图片 OCR |
 
 三个包共享同一套阿里云百炼路由、模型思考规则、请求体、响应解析和错误脱敏逻辑，但分别使用 Manggo Bun 与 Bob JavaScriptCore 的原生网络接口。所有请求都在本地插件运行时使用用户自己的 API Key 直连百炼；本项目不提供中转服务，也不收集文本、图片或凭据。
 
@@ -28,30 +28,34 @@
 
 Bob 插件使用 secure 类型保存 API Key。配置校验只做本地检查，不发送模型请求，也不产生调用费用。
 
-## 三种百炼计费模式
+## 公开包支持的百炼计费模式
 
 | 模式 | 自动 Base URL | Key 与建议模型 |
 |---|---|---|
-| 按量付费·中国 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | 中国地域通用 Key；默认 `qwen3.7-plus`，翻译可选 `qwen-mt-plus`，OCR 可选 `qwen3.5-ocr` |
+| 按量付费·中国 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | 中国地域通用 Key；翻译可选 `qwen-mt-plus`，OCR 可选 `qwen3.5-ocr` |
 | 按量付费·新加坡 | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` | 新加坡地域通用 Key；模型以该地域实际清单为准 |
-| Coding Plan | `https://coding.dashscope.aliyuncs.com/v1` | Coding Plan 专属 Key；建议 `qwen3.7-plus` |
 | Token Plan | `https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1` | Token Plan 专属 Key；建议 `qwen3.7-plus` |
 
 API Key 与 Base URL 必须属于同一模式和地域。插件不会根据 Key 前缀猜测线路。
 
-按量付费可填写 `Workspace ID`，插件会构造 Workspace 专属地址。`Custom Base URL` 是最高优先级的高级覆盖项，只接受 HTTPS；使用它意味着 API Key 会发送到你填写的地址，请只使用可信端点。
+公开安装包默认选择按量付费、`qwen3.7-plus` 和关闭思考；升级不会静默改写宿主已经保存的设置。按量付费可填写 `Workspace ID`，插件会构造 Workspace 专属地址。`Custom Base URL` 只用于按量付费的高级覆盖；Token Plan 固定使用官方套餐地址，避免误送专属 Key。
 
-### Coding Plan 与 Token Plan 边界
+### Coding Plan 边界与本地个人构建
 
-阿里云将 Coding Plan 和 Token Plan 限定为符合条件的交互式 AI 工具使用，禁止共享后端、自动化脚本和非交互式批量调用。安装本插件不会自动获得套餐资格；请按当前服务条款自行确认使用场景。公开或不确定的场景优先使用按量付费。
+阿里云当前明确禁止把 Coding Plan API Key 用于自定义应用程序；Manggo 与 Bob 也不在其列出的编程工具兼容范围内。因此，公开 Release、Bob 索引仓库和 Manggo 包只暴露按量付费与 Token Plan；公开运行时也会拒绝旧设置或手工传入的 `coding_plan`。
+
+仓库保留 `npm run package:personal`，仅用于在获得阿里云书面兼容确认后做本地验证。它会生成 `dist/personal/*-coding-plan-*`，包内和设置页均带有不受支持警告，并且这些文件不会上传 Release 或同步到索引仓库。生成本地包本身不代表获得使用许可。
 
 ## 模型、翻译与 OCR 行为
 
-- `qwen3.7-plus` 是三种模式共同适用的默认模型，支持文本和图片。
+- `qwen3.7-plus` 支持文本和图片，是公开包按量付费与 Token Plan 的通用默认模型；普通翻译和 OCR 默认明确关闭思考。
+- Token Plan 使用 2026-08-28 核对的精确模型目录；不在目录中的模型会在发请求前被拒绝。未公开的个人构建对 Coding Plan 使用独立精确目录。
 - `qwen-mt-plus` 只用于按量付费翻译。插件按官方格式发送英文完整语言名，并固定使用非流式请求，避免累计流式序列被重复拼接。
 - `qwen3.5-ocr` 是按量付费 OCR 专用预置；请求使用该模型要求的 user-only 消息结构。
-- Bob 翻译使用 `$http.streamRequest`，向 Bob 发送累计全文，并支持 `cancelSignal`。
+- Manggo 保持增量流式输出，Bob 保持累计全文输出；两端都对细碎模型事件做合并，首段立即显示，结束时强制刷完。
+- Bob 翻译使用 `$http.streamRequest`，订阅 `cancelSignal`；取消时立即丢弃待显示内容并阻止晚到分片或完成回调，同时限制错误响应预览的内存占用。
 - Bob OCR 固定非流式，把识别结果转换为 Bob 的逐行 `texts`。首版不提供文字坐标或 Bounding Box。
+- OCR 可选择 Auto、Fast 或 High 视觉分辨率。Fast 减少服务端视觉处理但可能遗漏小字，不会减少 Base64 上传体积；默认保持 Auto。
 - 自定义模型最终是否可用，取决于所选模式、地域和百炼当前模型清单。
 
 ## 思考强度
@@ -84,14 +88,17 @@ npm ci
 npm run build
 npm test
 npm run package
+# 仅供获得书面兼容确认后的本地验证，不公开发布：
+npm run package:personal
 ```
 
-输出位于 `dist/`：三个插件安装包和 `SHA256SUMS.txt`。打包脚本会验证：
+公开安装包输出位于 `dist/`，本地个人构建输出位于 `dist/personal/`；两处各自包含三个插件包和 `SHA256SUMS.txt`。打包脚本会验证：
 
 - 三个平台版本号一致；
 - ZIP 根目录包含各平台要求的 manifest 和入口文件；
 - Bob 包不含 ESM、Node 或浏览器专属运行时调用；
 - 包内不含本机用户路径或疑似真实 API Key。
+- Public/Personal runtime profile 已正确注入，并在 Manggo、Bob 翻译和 Bob OCR 入口上做真实运行验证。
 
 源码边界：
 

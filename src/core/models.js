@@ -1,32 +1,17 @@
 import { nonEmptyText, normalizedBoolean, selectedValue } from "./config.js";
+import { modelCapability } from "./catalog.js";
 
 const VALID_EFFORTS = Object.freeze({ auto: true, low: true, medium: true, high: true });
 
 export function thinkingFamily(model) {
   const id = nonEmptyText(model).toLowerCase();
-  if (id === "qwen3.8-max" || id === "qwen3.8-max-preview") return "qwen38";
-  if (id === "minimax-m2.5") return "always";
-  if (
-    id === "qwen3-coder-next"
-    || id === "qwen3-coder-plus"
-    || id.indexOf("qwen-mt-") === 0
-    || id === "qwen3.5-ocr"
-  ) return "unsupported";
-  if (
-    /^qwen3\.(5|6|7)-/.test(id)
-    || /^qwen3-max-/.test(id)
-    || id === "kimi-k2.5"
-    || /^glm-(4\.7|5)$/.test(id)
-  ) return "budget";
-  return "unknown";
+  const capability = modelCapability(id);
+  return capability ? capability.thinking : "unknown";
 }
 
 export function maximumThinkingTokens(model) {
-  const id = nonEmptyText(model).toLowerCase();
-  if (/^qwen3\.7-/.test(id)) return 262144;
-  if (/^qwen3\.(5|6)-/.test(id) || /^qwen3-max-/.test(id) || id === "kimi-k2.5") return 81920;
-  if (/^glm-(4\.7|5)$/.test(id)) return 32768;
-  return undefined;
+  const capability = modelCapability(model);
+  return capability && capability.maxThinkingTokens;
 }
 
 export function effortLevel(input) {
