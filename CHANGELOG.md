@@ -1,6 +1,13 @@
 # Changelog
 
-## 2.2.0 - 2026-08-28
+## 2.2.1 - 2026-08-28
+
+- Restrict public Manggo and Bob packages to pay-as-you-go after the current Alibaba Cloud terms were verified to prohibit both Coding Plan and Token Plan in custom applications.
+- Hard-reject both subscription-plan routes in public runtimes, including retained settings from older installs; keep them only in warning-marked local verification builds that are never released or indexed.
+
+## 2.2.0 - 2026-08-28 (withdrawn)
+
+This release was withdrawn after the current Token Plan subscription terms were rechecked; use 2.2.1 or later.
 
 - Default public installs to pay-as-you-go with `qwen3.7-plus` and thinking disabled; expose Token Plan with a dated exact model catalog, while keeping the prohibited Coding Plan profile out of public releases and indexes.
 - Add a warning-marked local-only Coding Plan packaging profile for compatibility testing after written approval, plus exact Coding/Token model validation and preflight OCR capability checks.

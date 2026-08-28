@@ -11,32 +11,37 @@ async function verifyManggo() {
   const entry = path.join(manggoStage, "main.js");
   const plugin = await import(`${pathToFileURL(entry).href}?profile=${encodeURIComponent(profile)}&time=${Date.now()}`);
   let requested = false;
-  const options = {
-    config: {
-      accessMode: "coding_plan",
+  async function invoke(accessMode) {
+    return plugin.translate("test", "English", "Chinese", {
+      config: {
+      accessMode,
       apiKey: "profile-verification-key",
       model: "qwen3.7-plus",
       region: "china",
       stream: false,
-    },
-    utils: {
-      fetch: async () => {
-        requested = true;
-        return new Response(JSON.stringify({
-          choices: [{ message: { content: "ok" }, finish_reason: "stop" }],
-        }), { status: 200, headers: { "Content-Type": "application/json" } });
       },
-    },
-  };
+      utils: {
+        fetch: async () => {
+          requested = true;
+          return new Response(JSON.stringify({
+            choices: [{ message: { content: "ok" }, finish_reason: "stop" }],
+          }), { status: 200, headers: { "Content-Type": "application/json" } });
+        },
+      },
+    });
+  }
 
   if (codingEnabled) {
-    assert.equal(await plugin.translate("test", "English", "Chinese", options), "ok");
+    assert.equal(await invoke("coding_plan"), "ok");
+    assert.equal(await invoke("token_plan"), "ok");
     assert.equal(requested, true);
   } else {
-    await assert.rejects(
-      plugin.translate("test", "English", "Chinese", options),
-      /Coding Plan is disabled in public plugin packages/,
-    );
+    for (const accessMode of ["coding_plan", "token_plan"]) {
+      await assert.rejects(
+        invoke(accessMode),
+        /Coding Plan and Token Plan are disabled in public plugin packages/,
+      );
+    }
     assert.equal(requested, false);
   }
 }
@@ -69,9 +74,9 @@ function loadBob(stage, option) {
   return context;
 }
 
-function verifyBob(stage, model) {
+function verifyBob(stage, model, accessMode) {
   const plugin = loadBob(stage, {
-    accessMode: "coding_plan",
+    accessMode,
     apiKey: "profile-verification-key",
     modelPreset: model,
     region: "china",
@@ -83,11 +88,13 @@ function verifyBob(stage, model) {
     assert.equal(results[0].result, true);
   } else {
     assert.equal(results[0].result, false);
-    assert.match(results[0].error.message, /Coding Plan is disabled in public plugin packages/);
+    assert.match(results[0].error.message, /Coding Plan and Token Plan are disabled in public plugin packages/);
   }
 }
 
 await verifyManggo();
-verifyBob(bobTranslateStage, "qwen3.7-plus");
-verifyBob(bobOcrStage, "qwen3.7-plus");
+for (const accessMode of ["coding_plan", "token_plan"]) {
+  verifyBob(bobTranslateStage, "qwen3.7-plus", accessMode);
+  verifyBob(bobOcrStage, "qwen3.7-plus", accessMode);
+}
 console.log(`Verified ${profile} runtime profile for Manggo, Bob Translate, and Bob OCR.`);

@@ -109,7 +109,6 @@ test("Bob translate public manifest uses a secure key, public modes, model overr
   assert.equal(configs.apiKey.textConfig.type, "secure");
   assert.deepEqual(configs.accessMode.menuValues.map((item) => item.value), [
     "pay_as_you_go",
-    "token_plan",
   ]);
   assert.equal(configs.accessMode.defaultValue, "pay_as_you_go");
   assert.equal(configs.modelPreset.defaultValue, "qwen3.7-plus");

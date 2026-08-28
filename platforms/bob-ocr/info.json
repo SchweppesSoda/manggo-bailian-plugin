@@ -1,9 +1,9 @@
 {
   "identifier": "com.schweppessoda.bailian.ocr",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "category": "ocr",
   "name": "百炼 OCR",
-  "summary": "Alibaba Cloud Model Studio OCR with pay-as-you-go and Token Plan routes.",
+  "summary": "Alibaba Cloud Model Studio OCR through its pay-as-you-go route.",
   "author": "SchweppesSoda",
   "homepage": "https://github.com/SchweppesSoda/bob-bailian-ocr",
   "appcast": "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-ocr/main/appcast.json",
@@ -15,10 +15,9 @@
       "title": "Billing mode",
       "defaultValue": "pay_as_you_go",
       "menuValues": [
-        { "title": "Pay-as-you-go", "value": "pay_as_you_go" },
-        { "title": "Token Plan (Personal Edition)", "value": "token_plan" }
+        { "title": "Pay-as-you-go", "value": "pay_as_you_go" }
       ],
-      "desc": "The Base URL and API Key must belong to the same mode. The public package does not expose Coding Plan because Alibaba Cloud prohibits it in custom applications."
+      "desc": "Public packages use the pay-as-you-go API. Alibaba Cloud prohibits Coding Plan and Token Plan in custom applications."
     },
     {
       "identifier": "region",
@@ -41,7 +40,7 @@
       "type": "text",
       "title": "Custom Base URL (advanced)",
       "textConfig": { "type": "visible", "placeholderText": "https://.../compatible-mode/v1" },
-      "desc": "Advanced pay-as-you-go override. Token Plan uses its official Base URL. HTTPS only."
+      "desc": "Advanced pay-as-you-go override. HTTPS only."
     },
     {
       "identifier": "apiKey",
@@ -55,10 +54,10 @@
       "title": "Model preset",
       "defaultValue": "qwen3.7-plus",
       "menuValues": [
-        { "title": "Qwen 3.7 Plus (pay-as-you-go / Token Plan)", "value": "qwen3.7-plus" },
-        { "title": "Qwen 3.8 Max (pay-as-you-go / Token Plan)", "value": "qwen3.8-max" },
-        { "title": "Qwen 3.8 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.8-flash" },
-        { "title": "Qwen 3.6 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.6-flash" },
+        { "title": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
+        { "title": "Qwen 3.8 Max", "value": "qwen3.8-max" },
+        { "title": "Qwen 3.8 Flash", "value": "qwen3.8-flash" },
+        { "title": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
         { "title": "Qwen 3.5 OCR (pay-as-you-go)", "value": "qwen3.5-ocr" },
         { "title": "Qwen 3.7 Flash (pay-as-you-go)", "value": "qwen3.7-flash" }
       ]

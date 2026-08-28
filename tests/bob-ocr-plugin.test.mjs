@@ -164,7 +164,7 @@ test("Bob OCR metadata is an independent secure OCR plugin", async () => {
   const info = JSON.parse(await readFile(new URL("../platforms/bob-ocr/info.json", import.meta.url), "utf8"));
   assert.equal(info.identifier, "com.schweppessoda.bailian.ocr");
   assert.equal(info.category, "ocr");
-  assert.equal(info.version, "2.2.0");
+  assert.equal(info.version, "2.2.1");
   assert.equal(info.minBobVersion, "1.8.0");
   assert.equal(info.homepage, "https://github.com/SchweppesSoda/bob-bailian-ocr");
   assert.equal(info.appcast, "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-ocr/main/appcast.json");
@@ -173,7 +173,7 @@ test("Bob OCR metadata is an independent secure OCR plugin", async () => {
   assert.equal(info.options.find((item) => item.identifier === "enableThinking").type, "menu");
   const accessMode = info.options.find((item) => item.identifier === "accessMode");
   assert.equal(accessMode.defaultValue, "pay_as_you_go");
-  assert.deepEqual(accessMode.menuValues.map((item) => item.value), ["pay_as_you_go", "token_plan"]);
+  assert.deepEqual(accessMode.menuValues.map((item) => item.value), ["pay_as_you_go"]);
   assert.equal(info.options.find((item) => item.identifier === "ocrResolution").defaultValue, "auto");
 });
 

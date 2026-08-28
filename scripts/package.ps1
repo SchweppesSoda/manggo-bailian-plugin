@@ -92,7 +92,7 @@ function Set-PersonalCodingManifest {
     if ($Profile -ne 'PersonalCoding') { return }
 
     $manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
-    $notice = 'Unsupported personal build: Alibaba Cloud currently prohibits Coding Plan in custom applications. Use only after receiving written compatibility confirmation.'
+    $notice = 'Unsupported personal build: Alibaba Cloud currently prohibits Coding Plan and Token Plan in custom applications. Use only after receiving written compatibility confirmation.'
     $accessModes = @(
         [pscustomobject]@{ title = 'Coding Plan (unsupported personal profile)'; value = 'coding_plan' },
         [pscustomobject]@{ title = 'Pay-as-you-go'; value = 'pay_as_you_go' },
@@ -157,9 +157,9 @@ function Add-PersonalCodingNotice {
     param([string]$DestinationDirectory)
     if ($Profile -ne 'PersonalCoding') { return }
     @(
-        'UNSUPPORTED PERSONAL CODING PLAN BUILD',
+        'UNSUPPORTED PERSONAL SUBSCRIPTION-PLAN BUILD',
         '',
-        'Alibaba Cloud currently prohibits Coding Plan API keys in custom applications.',
+        'Alibaba Cloud currently prohibits Coding Plan and Token Plan API keys in custom applications.',
         'Do not use this profile unless Alibaba Cloud gives you written compatibility confirmation.',
         'This build is intentionally excluded from public releases and Bob/Manggo indexes.'
     ) | Set-Content -LiteralPath (Join-Path $DestinationDirectory 'CODING-PLAN-NOTICE.txt') -Encoding utf8NoBOM
@@ -299,11 +299,12 @@ function Assert-ArchiveProfile {
         $reader = [System.IO.StreamReader]::new($manifest.Open())
         try { $manifestText = $reader.ReadToEnd() } finally { $reader.Dispose() }
         $hasCodingOption = $manifestText -match '"(value|default|defaultValue)"\s*:\s*"coding_plan"'
-        if ($Profile -eq 'PersonalCoding' -and -not $hasCodingOption) {
-            throw "$(Split-Path -Leaf $ArchivePath) is missing the personal Coding Plan option."
+        $hasTokenOption = $manifestText -match '"(value|default|defaultValue)"\s*:\s*"token_plan"'
+        if ($Profile -eq 'PersonalCoding' -and (-not $hasCodingOption -or -not $hasTokenOption)) {
+            throw "$(Split-Path -Leaf $ArchivePath) is missing a personal subscription-plan option."
         }
-        if ($Profile -eq 'Public' -and $hasCodingOption) {
-            throw "$(Split-Path -Leaf $ArchivePath) exposes Coding Plan in its public manifest."
+        if ($Profile -eq 'Public' -and ($hasCodingOption -or $hasTokenOption)) {
+            throw "$(Split-Path -Leaf $ArchivePath) exposes a subscription plan in its public manifest."
         }
     }
     finally {

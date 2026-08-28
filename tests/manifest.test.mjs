@@ -7,7 +7,7 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 
 test("manifest declares a public v2 plugin with both services", () => {
   assert.equal(manifest.manifestVersion, 1);
-  assert.equal(manifest.version, "2.2.0");
+  assert.equal(manifest.version, "2.2.1");
   assert.equal(packageJson.version, manifest.version);
   assert.equal(manifest.homepage, "https://github.com/SchweppesSoda/manggo-bailian-plugin");
   assert.deepEqual(manifest.runtime, {
@@ -24,13 +24,13 @@ test("manifest declares a public v2 plugin with both services", () => {
   );
 });
 
-test("public services expose pay-as-you-go and Token Plan without Coding Plan", () => {
+test("public services expose pay-as-you-go without subscription plans", () => {
   for (const service of manifest.services) {
     const configs = Object.fromEntries(service.config.map((item) => [item.key, item]));
     assert.equal(configs.accessMode.default, "pay_as_you_go");
     assert.deepEqual(
       configs.accessMode.options.map((option) => option.value),
-      ["pay_as_you_go", "token_plan"],
+      ["pay_as_you_go"],
     );
     assert.deepEqual(
       configs.region.options.map((option) => option.value),

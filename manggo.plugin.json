@@ -2,8 +2,8 @@
   "manifestVersion": 1,
   "id": "com.fangjun.manggo-bailian",
   "name": "Bailian Translation & OCR",
-  "version": "2.2.0",
-  "description": "Manggo translation and OCR services for Alibaba Cloud Model Studio pay-as-you-go and Token Plan.",
+  "version": "2.2.1",
+  "description": "Manggo translation and OCR services for Alibaba Cloud Model Studio pay-as-you-go.",
   "author": "Fang Jun",
   "homepage": "https://github.com/SchweppesSoda/manggo-bailian-plugin",
   "icon": "icon.png",
@@ -49,10 +49,9 @@
           "required": true,
           "default": "pay_as_you_go",
           "options": [
-            { "label": "Pay-as-you-go", "value": "pay_as_you_go" },
-            { "label": "Token Plan (Personal Edition)", "value": "token_plan" }
+            { "label": "Pay-as-you-go", "value": "pay_as_you_go" }
           ],
-          "description": "The API Key and Base URL must come from the same billing mode. The public package does not expose Coding Plan because Alibaba Cloud prohibits it in custom applications."
+          "description": "Public packages use the pay-as-you-go API. Alibaba Cloud prohibits Coding Plan and Token Plan in custom applications."
         },
         {
           "key": "region",
@@ -64,7 +63,7 @@
             { "label": "China (Beijing)", "value": "china" },
             { "label": "International (Singapore)", "value": "singapore" }
           ],
-          "description": "Singapore is available for pay-as-you-go. Token Plan currently uses China (Beijing)."
+          "description": "Choose the pay-as-you-go region that issued this API Key."
         },
         {
           "key": "workspaceId",
@@ -78,7 +77,7 @@
           "label": "Custom Base URL (optional)",
           "control": "text",
           "placeholder": "https://.../compatible-mode/v1",
-          "description": "Advanced pay-as-you-go override. Token Plan uses its official Base URL. HTTPS only."
+          "description": "Advanced pay-as-you-go override. HTTPS only."
         },
         {
           "key": "apiKey",
@@ -97,15 +96,15 @@
           "required": true,
           "default": "qwen3.7-plus",
           "options": [
-            { "label": "Qwen 3.7 Plus (pay-as-you-go / Token Plan)", "value": "qwen3.7-plus" },
-            { "label": "Qwen 3.8 Max (pay-as-you-go / Token Plan)", "value": "qwen3.8-max" },
-            { "label": "Qwen 3.8 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.8-flash" },
-            { "label": "Qwen 3.7 Max (pay-as-you-go / Token Plan)", "value": "qwen3.7-max" },
-            { "label": "Qwen 3.6 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.6-flash" },
+            { "label": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
+            { "label": "Qwen 3.8 Max", "value": "qwen3.8-max" },
+            { "label": "Qwen 3.8 Flash", "value": "qwen3.8-flash" },
+            { "label": "Qwen 3.7 Max", "value": "qwen3.7-max" },
+            { "label": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
             { "label": "Qwen MT Plus (pay-as-you-go only)", "value": "qwen-mt-plus" },
             { "label": "Qwen 3.7 Flash (pay-as-you-go only)", "value": "qwen3.7-flash" }
           ],
-          "description": "Token Plan selections are checked against the dated official model list before any request."
+          "description": "Model availability depends on the selected pay-as-you-go region."
         },
         {
           "key": "systemPrompt",
@@ -179,10 +178,9 @@
           "required": true,
           "default": "pay_as_you_go",
           "options": [
-            { "label": "Pay-as-you-go", "value": "pay_as_you_go" },
-            { "label": "Token Plan (Personal Edition)", "value": "token_plan" }
+            { "label": "Pay-as-you-go", "value": "pay_as_you_go" }
           ],
-          "description": "The API Key and Base URL must come from the same billing mode. The public package does not expose Coding Plan because Alibaba Cloud prohibits it in custom applications."
+          "description": "Public packages use the pay-as-you-go API. Alibaba Cloud prohibits Coding Plan and Token Plan in custom applications."
         },
         {
           "key": "region",
@@ -194,7 +192,7 @@
             { "label": "China (Beijing)", "value": "china" },
             { "label": "International (Singapore)", "value": "singapore" }
           ],
-          "description": "Singapore is available for pay-as-you-go. Token Plan currently uses China (Beijing)."
+          "description": "Choose the pay-as-you-go region that issued this API Key."
         },
         {
           "key": "workspaceId",
@@ -208,7 +206,7 @@
           "label": "Custom Base URL (optional)",
           "control": "text",
           "placeholder": "https://.../compatible-mode/v1",
-          "description": "Advanced pay-as-you-go override. Token Plan uses its official Base URL. HTTPS only."
+          "description": "Advanced pay-as-you-go override. HTTPS only."
         },
         {
           "key": "apiKey",
@@ -227,14 +225,14 @@
           "required": true,
           "default": "qwen3.7-plus",
           "options": [
-            { "label": "Qwen 3.7 Plus (pay-as-you-go / Token Plan)", "value": "qwen3.7-plus" },
-            { "label": "Qwen 3.8 Max (pay-as-you-go / Token Plan)", "value": "qwen3.8-max" },
-            { "label": "Qwen 3.8 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.8-flash" },
-            { "label": "Qwen 3.6 Flash (pay-as-you-go / Token Plan)", "value": "qwen3.6-flash" },
+            { "label": "Qwen 3.7 Plus", "value": "qwen3.7-plus" },
+            { "label": "Qwen 3.8 Max", "value": "qwen3.8-max" },
+            { "label": "Qwen 3.8 Flash", "value": "qwen3.8-flash" },
+            { "label": "Qwen 3.6 Flash", "value": "qwen3.6-flash" },
             { "label": "Qwen 3.5 OCR (pay-as-you-go only)", "value": "qwen3.5-ocr" },
             { "label": "Qwen 3.7 Flash (pay-as-you-go only)", "value": "qwen3.7-flash" }
           ],
-          "description": "Choose a model with native image input. Token Plan selections are checked before any request; qwen3.5-ocr is pay-as-you-go only."
+          "description": "Choose a pay-as-you-go model with native image input; qwen3.5-ocr is optimized for OCR."
         },
         {
           "key": "systemPrompt",

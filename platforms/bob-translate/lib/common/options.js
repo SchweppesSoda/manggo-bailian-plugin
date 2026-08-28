@@ -115,8 +115,9 @@ function normalizeConfig(options) {
 }
 
 function automaticBaseUrl(config) {
-  if (config.accessMode === ACCESS_MODE.CODING && RUNTIME_PROFILE === "__BAILIAN_RUNTIME_PROFILE_PUBLIC__") {
-    throw new Error("Coding Plan is disabled in public plugin packages; use pay-as-you-go or Token Plan.");
+  if ((config.accessMode === ACCESS_MODE.CODING || config.accessMode === ACCESS_MODE.TOKEN)
+      && RUNTIME_PROFILE === "__BAILIAN_RUNTIME_PROFILE_PUBLIC__") {
+    throw new Error("Coding Plan and Token Plan are disabled in public plugin packages; use pay-as-you-go.");
   }
   if (config.customBaseUrl) {
     if (config.accessMode === ACCESS_MODE.CODING || config.accessMode === ACCESS_MODE.TOKEN) {

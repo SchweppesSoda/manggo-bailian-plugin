@@ -168,8 +168,8 @@ function secureBaseUrl(input) {
 }
 function automaticBaseUrl(config = {}) {
   const mode = selectedValue(config.accessMode, DEFAULTS.accessMode, VALID_ACCESS_MODES, "billing mode");
-  if (mode === ACCESS_MODE.CODING && RUNTIME_PROFILE === "__BAILIAN_RUNTIME_PROFILE_PUBLIC__") {
-    throw new Error("Coding Plan is disabled in public plugin packages; use pay-as-you-go or Token Plan.");
+  if ((mode === ACCESS_MODE.CODING || mode === ACCESS_MODE.TOKEN) && RUNTIME_PROFILE === "__BAILIAN_RUNTIME_PROFILE_PUBLIC__") {
+    throw new Error("Coding Plan and Token Plan are disabled in public plugin packages; use pay-as-you-go.");
   }
   const custom = nonEmptyText(config.customBaseUrl);
   if (custom) {

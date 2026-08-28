@@ -1,9 +1,9 @@
 {
   "identifier": "com.schweppessoda.bailian.translate",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "category": "translate",
   "name": "百炼翻译",
-  "summary": "通过阿里云百炼 Model Studio 翻译文本。支持按量付费和 Token Plan。",
+  "summary": "通过阿里云百炼 Model Studio 按量付费接口翻译文本。",
   "author": "SchweppesSoda",
   "homepage": "https://github.com/SchweppesSoda/bob-bailian-translate",
   "appcast": "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-translate/main/appcast.json",
@@ -28,13 +28,9 @@
         {
           "title": "Pay-as-you-go",
           "value": "pay_as_you_go"
-        },
-        {
-          "title": "Token Plan",
-          "value": "token_plan"
         }
       ],
-      "desc": "Select the mode that issued this API Key. The public package does not expose Coding Plan because Alibaba Cloud prohibits it in custom applications."
+      "desc": "Public packages use the pay-as-you-go API. Alibaba Cloud prohibits Coding Plan and Token Plan in custom applications."
     },
     {
       "identifier": "region",
@@ -71,7 +67,7 @@
         "type": "visible",
         "placeholderText": "https://example.com/v1"
       },
-      "desc": "Advanced pay-as-you-go override. Token Plan uses its official Base URL. HTTPS only."
+      "desc": "Advanced pay-as-you-go override. HTTPS only."
     },
     {
       "identifier": "modelPreset",
@@ -80,23 +76,23 @@
       "defaultValue": "qwen3.7-plus",
       "menuValues": [
         {
-          "title": "Qwen3.7 Plus (pay-as-you-go / Token Plan)",
+          "title": "Qwen3.7 Plus",
           "value": "qwen3.7-plus"
         },
         {
-          "title": "Qwen3.8 Max (pay-as-you-go / Token Plan)",
+          "title": "Qwen3.8 Max",
           "value": "qwen3.8-max"
         },
         {
-          "title": "Qwen3.8 Flash (pay-as-you-go / Token Plan)",
+          "title": "Qwen3.8 Flash",
           "value": "qwen3.8-flash"
         },
         {
-          "title": "Qwen3.7 Max (pay-as-you-go / Token Plan)",
+          "title": "Qwen3.7 Max",
           "value": "qwen3.7-max"
         },
         {
-          "title": "Qwen3.6 Flash (pay-as-you-go / Token Plan)",
+          "title": "Qwen3.6 Flash",
           "value": "qwen3.6-flash"
         },
         {
