@@ -1,8 +1,8 @@
 /* Incremental Server-Sent Events parsing for Bob's streamHandler chunks. */
 
-// The generated Core bundle owns event decoding and output batching.
-// Only Bob's incremental transport framing belongs in this adapter.
-var core = require("../core.js");
+// This local bundle is generated from Core and also ships with the source.
+// The optional full Core is not required for Bob's development fallback.
+var core = require("./streaming-core.js");
 
 function processEvent(block, state) {
   var event = core.parseSseEvent(block);

@@ -177,7 +177,7 @@ function Assert-ArchiveModes {
 }
 
 Assert-ArchiveEntries -ArchivePath $manggoPackage -RequiredEntries @('manggo.plugin.json', 'main.js', 'icon.png')
-Assert-ArchiveEntries -ArchivePath $translatePackage -RequiredEntries @('info.json', 'main.js', 'icon.png', 'lib/core.js', 'lib/translate/main.js')
+Assert-ArchiveEntries -ArchivePath $translatePackage -RequiredEntries @('info.json', 'main.js', 'icon.png', 'lib/core.js', 'lib/common/streaming-core.js', 'lib/translate/main.js')
 Assert-ArchiveEntries -ArchivePath $ocrPackage -RequiredEntries @('info.json', 'main.js', 'icon.png', 'lib/core.js', 'lib/plugin.js')
 Assert-ArchiveSafety -ArchivePath $manggoPackage
 Assert-ArchiveSafety -ArchivePath $translatePackage -BobRuntime

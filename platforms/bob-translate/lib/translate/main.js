@@ -2,9 +2,9 @@
  * Canonical Bob Translate entry module.
  *
  * The module only depends on Bob's $option/$http through the runtime object.
- * The build includes the pure Core as a Bob-compatible CommonJS module.
- * Request helpers can still be injected through setCore() or the runtime
- * object; shared event decoding and batching come from the packaged Core.
+ * The full Core can be injected through setCore() or the runtime object.
+ * Without it, request helpers use local fallbacks; event decoding and batching
+ * use the checked-in, Core-generated module beside the SSE adapter.
  */
 
 var options = require("../common/options.js");

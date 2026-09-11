@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
+import { bundleBobStreaming } from "../scripts/build.mjs";
 
 const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const platformRoot = path.join(repoRoot, "platforms", "bob-translate");
@@ -52,7 +53,7 @@ function createCancelSignal() {
   };
 }
 
-function createCommonJsLoader(globals = {}) {
+function createCommonJsLoader(globals = {}, { readSource = readFileSync } = {}) {
   const sandbox = { ...globals };
   const context = vm.createContext(sandbox);
   const moduleCache = new Map();
@@ -63,7 +64,7 @@ function createCommonJsLoader(globals = {}) {
 
     const module = { exports: {} };
     moduleCache.set(resolved, module);
-    const source = readFileSync(resolved, "utf8");
+    const source = readSource(resolved, "utf8");
     const localRequire = (request) => {
       if (!request.startsWith(".")) throw new Error(`Only local Bob modules are supported in this test: ${request}`);
       let requested = path.resolve(path.dirname(resolved), request);
@@ -124,6 +125,7 @@ test("platform sources are package-local copies of the canonical Bob adapter", a
     ["src/bob/common/options.js", "platforms/bob-translate/lib/common/options.js"],
     ["src/bob/common/languages.js", "platforms/bob-translate/lib/common/languages.js"],
     ["src/bob/common/sse.js", "platforms/bob-translate/lib/common/sse.js"],
+    ["src/bob/common/streaming-core.js", "platforms/bob-translate/lib/common/streaming-core.js"],
     ["src/bob/common/transport.js", "platforms/bob-translate/lib/common/transport.js"],
     ["src/bob/translate/main.js", "platforms/bob-translate/lib/translate/main.js"],
   ];
@@ -281,41 +283,44 @@ test("Qwen MT Plus is non-streaming and sends English language names, not Bob co
   assert.deepEqual(plain(completionResults[0].result.toParagraphs), ["Hello"]);
 });
 
-test("core injection receives model-facing names for Qwen MT requests", () => {
-  const loader = createCommonJsLoader();
-  const entry = loader.loadModule(path.join(platformRoot, "lib", "translate", "main.js"));
-  let coreArguments;
-  const completionResults = [];
-  const core = {
-    translationRequest(...args) {
-      coreArguments = args;
-      return { model: "qwen-mt-plus", stream: false, messages: [] };
-    },
-    chatEndpoint() {
-      return "https://example.test/v1/chat/completions";
-    },
-  };
-  const http = {
-    request(value) {
-      value.handler({
-        response: { statusCode: 200 },
-        data: { choices: [{ message: { content: "Hello" }, finish_reason: "stop" }] },
-      });
-    },
-  };
+for (const injection of ["runtime", "setCore"]) {
+  test(`source ${injection} injection receives model-facing names for Qwen MT requests`, () => {
+    const loader = createCommonJsLoader();
+    const entry = loader.loadModule(path.join(repoRoot, "src", "bob", "translate", "main.js"));
+    let coreArguments;
+    const completionResults = [];
+    const core = {
+      translationRequest(...args) {
+        coreArguments = args;
+        return { model: "qwen-mt-plus", stream: false, messages: [] };
+      },
+      chatEndpoint() {
+        return "https://example.test/v1/chat/completions";
+      },
+    };
+    const http = {
+      request(value) {
+        value.handler({
+          response: { statusCode: 200 },
+          data: { choices: [{ message: { content: "Hello" }, finish_reason: "stop" }] },
+        });
+      },
+    };
 
-  entry.translate({
-    text: "Hola",
-    from: "es",
-    to: "en",
-    detectFrom: "es",
-    detectTo: "en",
-    onCompletion: (result) => completionResults.push(result),
-  }, null, { option: defaultOptions({ modelPreset: "qwen-mt-plus" }), http, core });
+    if (injection === "setCore") entry.setCore(core);
+    entry.translate({
+      text: "Hola",
+      from: "es",
+      to: "en",
+      detectFrom: "es",
+      detectTo: "en",
+      onCompletion: (result) => completionResults.push(result),
+    }, null, { option: defaultOptions({ modelPreset: "qwen-mt-plus" }), http, core: injection === "runtime" ? core : undefined });
 
-  assert.deepEqual(coreArguments.slice(0, 3), ["Hola", "Spanish", "English"]);
-  assert.equal(completionResults.length, 1);
-});
+    assert.deepEqual(coreArguments.slice(0, 3), ["Hola", "Spanish", "English"]);
+    assert.equal(completionResults.length, 1);
+  });
+}
 
 test("HTTP errors are mapped as network errors and redact the API Key", () => {
   const completionResults = [];
@@ -402,4 +407,56 @@ test("Bob framing keeps Core multiline decoding and truncation across CRLF chunk
   assert.deepEqual(additions, ["Hello", " world"]);
   const broken = sse.createSseAccumulator(() => assert.fail("malformed data must not be emitted"));
   assert.throws(() => broken.push('data: {invalid}\n\n'), /invalid streaming event/);
+});
+
+for (const sourceMode of [true, false]) {
+  test(`${sourceMode ? "source" : "packaged"} streaming works without full Core`, () => {
+    const snapshots = [];
+    const completions = [];
+    const option = defaultOptions();
+    const http = {
+      streamRequest(request) {
+        assert.equal(request.body.stream, true);
+        for (const text of [
+          'data: {"choices":[{"delta":{"content":"Hel',
+          'lo"}}]}\r\n\r\n',
+          'data: {"choices":[{"delta":{"content":[{"text":" world"}]},"finish_reason":"stop"}]}\n\n',
+          'data: [DONE]'
+        ]) request.streamHandler({ text });
+        request.handler({ response: { statusCode: 200 } });
+      }
+    };
+    const fullCore = path.join(platformRoot, "lib", "core.js");
+    const loader = createCommonJsLoader({ $option: option, $http: http }, {
+      readSource(filename, encoding) {
+        if (filename === fullCore) {
+          const error = new Error("Full Core is absent in this development fixture.");
+          error.code = "ENOENT";
+          throw error;
+        }
+        return readFileSync(filename, encoding);
+      }
+    });
+    let plugin;
+    if (sourceMode) {
+      plugin = loader.loadModule(path.join(repoRoot, "src", "bob", "translate", "main.js"));
+    } else {
+      loader.runEntry(path.join(platformRoot, "main.js"));
+      plugin = loader.context;
+    }
+    plugin.translate({
+      text: "source", from: "en", to: "zh-Hans",
+      onStream: (result) => snapshots.push(result.toParagraphs[0]),
+      onCompletion: (result) => completions.push(result)
+    }, null, { option, http });
+    assert.deepEqual(snapshots, ["Hello", "Hello world"]);
+    assert.equal(completions.length, 1);
+    assert.deepEqual(plain(completions[0].result.toParagraphs), ["Hello world"]);
+  });
+}
+
+test("checked-in Bob streaming bundle matches the maintained Core sources", async () => {
+  const generated = await bundleBobStreaming(false);
+  const checkedIn = await readFile(path.join(repoRoot, "src", "bob", "common", "streaming-core.js"), "utf8");
+  assert.equal(checkedIn.replace(/\r\n/g, "\n"), generated.outputFiles[0].text);
 });

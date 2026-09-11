@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Preserve Bob Translate source loading, Core injection, and development streaming without the full Core bundle while reusing Core-generated parsing and batching.
+
 ## 2.3.0 - 2026-08-28
 
 - Replace the public/personal package split with one package per host that exposes pay-as-you-go, Coding Plan, and Token Plan while keeping pay-as-you-go as the default.

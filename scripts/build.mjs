@@ -50,6 +50,27 @@ async function bundleBobCore(platform) {
   await copyFile(resolve(libDirectory, "core.cjs"), resolve(libDirectory, "core.js"));
 }
 
+// The small, checked-in bundle keeps Bob's source/development entry runnable
+// without the optional full Core. All maintained logic stays in src/core.
+export async function bundleBobStreaming(write = true) {
+  return build({
+    stdin: {
+      contents: 'export { contentText, eventData, parseSseEvent } from "./responses.js";\n'
+        + 'export { createStreamBatcher } from "./streaming.js";',
+      resolveDir: pathFromRoot("src", "core"),
+      sourcefile: "bob-streaming-entry.js",
+    },
+    outfile: pathFromRoot("src", "bob", "common", "streaming-core.js"),
+    bundle: true,
+    format: "cjs",
+    platform: "neutral",
+    target: "es2017",
+    legalComments: "none",
+    banner: { js: "// Generated from src/core by npm run build. Do not edit directly." },
+    write,
+  });
+}
+
 async function copyBobOcrRuntime() {
   const sourceDirectory = pathFromRoot("src", "bob", "ocr");
   const destinationDirectory = pathFromRoot("platforms", "bob-ocr", "lib");
@@ -69,6 +90,7 @@ async function copyBobTranslateRuntime() {
     ["common/options.js", "common/options.js"],
     ["common/languages.js", "common/languages.js"],
     ["common/sse.js", "common/sse.js"],
+    ["common/streaming-core.js", "common/streaming-core.js"],
     ["common/transport.js", "common/transport.js"],
     ["translate/main.js", "translate/main.js"],
   ];
@@ -100,6 +122,7 @@ async function buildBobArtifacts() {
   // pure core bundle plus JavaScriptCore-compatible adapter files.
   const translatePlatform = pathFromRoot("platforms", "bob-translate");
   if (await exists(translatePlatform)) {
+    await bundleBobStreaming();
     await bundleBobCore("bob-translate");
     await copyBobTranslateRuntime();
   }
@@ -107,5 +130,7 @@ async function buildBobArtifacts() {
   await copyBobIcons();
 }
 
-await bundleManggo();
-await buildBobArtifacts();
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await bundleManggo();
+  await buildBobArtifacts();
+}

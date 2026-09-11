@@ -106,6 +106,8 @@ src/bob/ocr/           Bob OCR 图片与结果适配
 platforms/bob-*/       两个 Bob 包的独立 manifest 和生成产物
 ```
 
+Bob 翻译的 `src/bob/common/streaming-core.js` 由 `npm run build` 从 Core 生成并随源码提交，保持源码入口和缺少完整 Core 时的开发回退可用。请修改 `src/core/`，不要手改该生成文件；测试会检查其内容与 Core 及平台副本一致。
+
 ## Bob 发布结构
 
 一个 Bob `info.json` 只能声明一个 `category`，根 `appcast.json` 也只能对应一个插件标识。因此本仓库负责全部源码和构建，翻译与 OCR 分别同步到两个只负责发布和索引的薄仓库：
