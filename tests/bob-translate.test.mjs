@@ -283,7 +283,7 @@ test("Qwen MT Plus is non-streaming and sends English language names, not Bob co
 
 test("core injection receives model-facing names for Qwen MT requests", () => {
   const loader = createCommonJsLoader();
-  const entry = loader.loadModule(path.join(repoRoot, "src", "bob", "translate", "main.js"));
+  const entry = loader.loadModule(path.join(platformRoot, "lib", "translate", "main.js"));
   let coreArguments;
   const completionResults = [];
   const core = {
@@ -384,4 +384,22 @@ test("plugin validation uses the injected Core without spending a request", () =
   assert.equal(results[0].result, false);
   assert.equal(results[0].error.type, "param");
   assert.match(results[0].error.message, /valid HTTPS URL/);
+});
+
+test("Bob framing keeps Core multiline decoding and truncation across CRLF chunks", () => {
+  const loader = createCommonJsLoader();
+  const sse = loader.loadModule(path.join(platformRoot, "lib", "common", "sse.js"));
+  const additions = [];
+  const accumulator = sse.createSseAccumulator((value) => additions.push(value));
+  const stream = [
+    ': heartbeat\r\n\r\n',
+    'data: {"choices":[{\r\ndata: "delta":{"reasoning_content":"private","content":[{"text":"Hello"}]}}]}\r\n\r\n',
+    'data: {"choices":[{"delta":{"content":" world"},"finish_reason":"length"}]}\r\n\r\n',
+    'data: [DONE]'
+  ].join("");
+  for (const character of stream) accumulator.push(character);
+  assert.equal(accumulator.finish().truncated, true);
+  assert.deepEqual(additions, ["Hello", " world"]);
+  const broken = sse.createSseAccumulator(() => assert.fail("malformed data must not be emitted"));
+  assert.throws(() => broken.push('data: {invalid}\n\n'), /invalid streaming event/);
 });

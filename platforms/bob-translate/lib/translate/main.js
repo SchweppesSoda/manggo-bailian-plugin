@@ -2,9 +2,9 @@
  * Canonical Bob Translate entry module.
  *
  * The module only depends on Bob's $option/$http through the runtime object.
- * A build can inject the pure ESM src/core/index.js exports through setCore()
- * after converting them to a Bob-compatible CommonJS module; the fallback
- * builder keeps the source package runnable before that build integration.
+ * The build includes the pure Core as a Bob-compatible CommonJS module.
+ * Request helpers can still be injected through setCore() or the runtime
+ * object; shared event decoding and batching come from the packaged Core.
  */
 
 var options = require("../common/options.js");

@@ -100,7 +100,7 @@ npm run package
 ```text
 src/core/              纯数据 Core，不访问任何平台运行时
 src/manggo/            Manggo Bun 入口与网络适配
-src/bob/common/        Bob 翻译公共适配
+src/bob/common/        Bob 网络与分片适配，复用 Core 的解析和输出合并
 src/bob/translate/     Bob 翻译入口
 src/bob/ocr/           Bob OCR 图片与结果适配
 platforms/bob-*/       两个 Bob 包的独立 manifest 和生成产物
