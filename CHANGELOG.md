@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.3.1 - 2026-09-13
 
 - Fail Manggo and Bob translation streams on service error events, including after partial output.
 - Redact Manggo fetch/reader failures using the original request key and preserve cancellation errors.

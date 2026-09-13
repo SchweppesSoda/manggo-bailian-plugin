@@ -164,7 +164,7 @@ test("Bob OCR metadata is an independent secure OCR plugin", async () => {
   const info = JSON.parse(await readFile(new URL("../platforms/bob-ocr/info.json", import.meta.url), "utf8"));
   assert.equal(info.identifier, "com.schweppessoda.bailian.ocr");
   assert.equal(info.category, "ocr");
-  assert.equal(info.version, "2.3.0");
+  assert.equal(info.version, "2.3.1");
   assert.equal(info.minBobVersion, "1.8.0");
   assert.equal(info.homepage, "https://github.com/SchweppesSoda/bob-bailian-ocr");
   assert.equal(info.appcast, "https://raw.githubusercontent.com/SchweppesSoda/bob-bailian-ocr/main/appcast.json");

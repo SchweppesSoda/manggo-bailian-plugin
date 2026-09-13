@@ -6,9 +6,9 @@
 
 | 平台 | 安装包 | 能力 |
 |---|---|---|
-| Manggo | `manggo-bailian-2.3.0.mplugin` | 翻译 + OCR |
-| Bob 1.8+ | `bob-bailian-translate-2.3.0.bobplugin` | 流式文本翻译 |
-| Bob 1.8+ | `bob-bailian-ocr-2.3.0.bobplugin` | 图片 OCR |
+| Manggo | `manggo-bailian-2.3.1.mplugin` | 翻译 + OCR |
+| Bob 1.8+ | `bob-bailian-translate-2.3.1.bobplugin` | 流式文本翻译 |
+| Bob 1.8+ | `bob-bailian-ocr-2.3.1.bobplugin` | 图片 OCR |
 
 三个包共享同一套阿里云百炼路由、模型思考规则、请求体、响应解析和错误脱敏逻辑，但分别使用 Manggo Bun 与 Bob JavaScriptCore 的原生网络接口。所有请求都在本地插件运行时使用用户自己的 API Key 直连百炼；本项目不提供中转服务，也不收集文本、图片或凭据。
 

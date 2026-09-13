@@ -7,7 +7,7 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 
 test("manifest declares a v2.3 plugin with both services", () => {
   assert.equal(manifest.manifestVersion, 1);
-  assert.equal(manifest.version, "2.3.0");
+  assert.equal(manifest.version, "2.3.1");
   assert.equal(packageJson.version, manifest.version);
   assert.equal(manifest.homepage, "https://github.com/SchweppesSoda/manggo-bailian-plugin");
   assert.deepEqual(manifest.runtime, {

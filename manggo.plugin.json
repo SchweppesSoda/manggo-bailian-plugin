@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "com.fangjun.manggo-bailian",
   "name": "Bailian Translation & OCR",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Manggo translation and OCR services for Alibaba Cloud Model Studio pay-as-you-go, Coding Plan, and Token Plan.",
   "author": "Fang Jun",
   "homepage": "https://github.com/SchweppesSoda/manggo-bailian-plugin",

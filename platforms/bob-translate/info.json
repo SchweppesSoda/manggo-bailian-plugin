@@ -1,6 +1,6 @@
 {
   "identifier": "com.schweppessoda.bailian.translate",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "category": "translate",
   "name": "百炼翻译",
   "summary": "通过阿里云百炼 Model Studio 按量付费、Coding Plan 或 Token Plan 翻译文本。",
