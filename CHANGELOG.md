@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fail Manggo and Bob translation streams on service error events, including after partial output.
+- Redact Manggo fetch/reader failures using the original request key and preserve cancellation errors.
+
 - Preserve Bob Translate source loading, Core injection, and development streaming without the full Core bundle while reusing Core-generated parsing and batching.
 
 ## 2.3.0 - 2026-08-28

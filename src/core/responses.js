@@ -48,6 +48,10 @@ export function parseSseEvent(block) {
   } catch (_) {
     throw new Error("Model Studio returned an invalid streaming event.");
   }
+  if (decoded && decoded.error) {
+    // Service error bodies can contain credentials or request content.
+    throw new Error("Model Studio returned a streaming error.");
+  }
   const choice = decoded && decoded.choices && decoded.choices[0];
   if (!choice) return { addition: "", done: false, truncated: false };
   return {

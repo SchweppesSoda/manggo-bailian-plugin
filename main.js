@@ -474,6 +474,9 @@ function parseSseEvent(block) {
   } catch (_) {
     throw new Error("Model Studio returned an invalid streaming event.");
   }
+  if (decoded && decoded.error) {
+    throw new Error("Model Studio returned a streaming error.");
+  }
   const choice = decoded && decoded.choices && decoded.choices[0];
   if (!choice) return { addition: "", done: false, truncated: false };
   return {
@@ -635,8 +638,15 @@ async function streamCompletion(response, options, allowEmpty) {
   return result;
 }
 async function complete(request, options, allowEmpty) {
-  const response = await sendRequest(request, options);
-  return request.stream ? streamCompletion(response, options, allowEmpty) : jsonCompletion(response, allowEmpty);
+  const apiKey = nonEmptyText(configFrom(options).apiKey);
+  try {
+    const response = await sendRequest(request, options);
+    return await (request.stream ? streamCompletion(response, options, allowEmpty) : jsonCompletion(response, allowEmpty));
+  } catch (error) {
+    const safeError = new Error(redactSensitiveText(error && error.message ? error.message : String(error), apiKey));
+    if (error && error.name === "AbortError") safeError.name = "AbortError";
+    throw safeError;
+  }
 }
 
 // src/manggo/entry.js

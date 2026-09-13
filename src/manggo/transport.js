@@ -5,6 +5,7 @@ import {
   nonEmptyText,
   parseJsonCompletion,
   parseSseEvent,
+  redactSensitiveText,
 } from "../core/index.js";
 
 function configFrom(options) {
@@ -102,8 +103,15 @@ export async function streamCompletion(response, options, allowEmpty) {
 }
 
 export async function complete(request, options, allowEmpty) {
-  const response = await sendRequest(request, options);
-  return request.stream
-    ? streamCompletion(response, options, allowEmpty)
-    : jsonCompletion(response, allowEmpty);
+  const apiKey = nonEmptyText(configFrom(options).apiKey);
+  try {
+    const response = await sendRequest(request, options);
+    return await (request.stream
+      ? streamCompletion(response, options, allowEmpty)
+      : jsonCompletion(response, allowEmpty));
+  } catch (error) {
+    const safeError = new Error(redactSensitiveText(error && error.message ? error.message : String(error), apiKey));
+    if (error && error.name === "AbortError") safeError.name = "AbortError";
+    throw safeError;
+  }
 }

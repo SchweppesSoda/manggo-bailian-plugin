@@ -460,3 +460,44 @@ test("checked-in Bob streaming bundle matches the maintained Core sources", asyn
   const checkedIn = await readFile(path.join(repoRoot, "src", "bob", "common", "streaming-core.js"), "utf8");
   assert.equal(checkedIn.replace(/\r\n/g, "\n"), generated.outputFiles[0].text);
 });
+
+
+for (const mode of ["source", "packaged", "packaged-fallback"]) {
+  test(mode + ": partial SSE followed by service error cannot complete successfully", () => {
+    const completions = [];
+    const option = defaultOptions();
+    const http = {
+      streamRequest(request) {
+        request.streamHandler({ text: 'data: {"choices":[{"delta":{"content":"partial"}}]}\n\n' });
+        request.streamHandler({ text: 'data: {"error":{"message":"invalid bob-private-key-123"}}\n\n' });
+        request.streamHandler({ text: 'data: [DONE]\n\n' });
+        request.handler({ response: { statusCode: 200 } });
+        request.handler({ response: { statusCode: 200 } });
+      }
+    };
+    const loader = createCommonJsLoader({ $option: option, $http: http }, {
+      readSource(filename, encoding) {
+        if (mode === "packaged-fallback" && filename === path.join(platformRoot, "lib", "core.js")) {
+          throw new Error("Full Core is absent in this fixture.");
+        }
+        return readFileSync(filename, encoding);
+      }
+    });
+    let plugin;
+    if (mode === "source") {
+      plugin = loader.loadModule(path.join(repoRoot, "src", "bob", "translate", "main.js"));
+    } else {
+      loader.runEntry(path.join(platformRoot, "main.js"));
+      plugin = loader.context;
+    }
+    plugin.translate({
+      text: "test", from: "en", to: "zh-Hans",
+      onCompletion: (result) => completions.push(result)
+    }, null, { option, http });
+    assert.equal(completions.length, 1);
+    assert.equal(completions[0].result, undefined);
+    assert.equal(completions[0].error.type, "api");
+    assert.match(completions[0].error.message, /streaming error/);
+    assert.doesNotMatch(completions[0].error.message, /bob-private-key-123/);
+  });
+}
